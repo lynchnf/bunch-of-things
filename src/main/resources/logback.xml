@@ -23,7 +23,7 @@
         </rollingPolicy>
     </appender>
 
-    <logger name="norman.bunch-of-things" level="debug"/>
+    <logger name="norman.bunch.of.things" level="debug"/>
     <root level="info">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>

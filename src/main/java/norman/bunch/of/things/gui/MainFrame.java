@@ -1,6 +1,9 @@
 package norman.bunch.of.things.gui;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import norman.bunch.of.things.Application;
+import norman.bunch.of.things.BunchType;
 import norman.bunch.of.things.LocaleWrapper;
 import norman.bunch.of.things.LoggingException;
 import org.slf4j.Logger;
@@ -11,6 +14,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -22,6 +27,7 @@ public class MainFrame extends JFrame implements ActionListener {
     private JDesktopPane desktop;
     private JMenuItem optionsFileItem;
     private JMenuItem exitFileItem;
+    private JMenuItem importRuleBookItem;
 
     public MainFrame(Properties appProps) throws HeadlessException {
         super();
@@ -56,6 +62,12 @@ public class MainFrame extends JFrame implements ActionListener {
         exitFileItem = new JMenuItem(bundle.getString("menu.file.exit"));
         fileMenu.add(exitFileItem);
         exitFileItem.addActionListener(this);
+
+        JMenu ruleBookMenu = new JMenu(bundle.getString("menu.rule.book"));
+        menuBar.add(ruleBookMenu);
+        importRuleBookItem = new JMenuItem(bundle.getString("menu.rule.book.import"));
+        ruleBookMenu.add(importRuleBookItem);
+        importRuleBookItem.addActionListener(this);
     }
 
     @Override
@@ -65,6 +77,8 @@ public class MainFrame extends JFrame implements ActionListener {
             processWindowEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         } else if (actionEvent.getSource().equals(optionsFileItem)) {
             options();
+        } else if (actionEvent.getSource().equals(importRuleBookItem)) {
+            importRuleBook();
         }
     }
 
@@ -84,15 +98,13 @@ public class MainFrame extends JFrame implements ActionListener {
             try {
                 Application.storeProps(appProps);
             } catch (LoggingException e) {
-                JOptionPane.showMessageDialog(this, bundle.getString("error.message.saving.window.size.and.location"),
-                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.saving.window.size.and.location"), bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             }
         }
         super.processWindowEvent(windowEvent);
     }
 
     private void options() {
-        // Put up an options panel to change the number of moves per second
         JFrame optionsFrame = new JFrame();
         optionsFrame.setTitle(bundle.getString("options.title"));
         optionsFrame.setResizable(false);
@@ -104,7 +116,7 @@ public class MainFrame extends JFrame implements ActionListener {
         JLabel langLabel = new JLabel(bundle.getString("options.language"));
         optionsPanel.add(langLabel);
 
-        LocaleWrapper[] locales = {new LocaleWrapper(Locale.ENGLISH), new LocaleWrapper(Locale.FRENCH), new LocaleWrapper(Locale.GERMAN)};
+        LocaleWrapper[] locales = {new LocaleWrapper(Locale.ENGLISH), new LocaleWrapper(Locale.FRENCH)};
         JComboBox langComboBox = new JComboBox(locales);
         optionsPanel.add(langComboBox);
         langComboBox.setSelectedItem(new LocaleWrapper());
@@ -116,8 +128,7 @@ public class MainFrame extends JFrame implements ActionListener {
                 try {
                     Application.storeProps(appProps);
                 } catch (LoggingException e) {
-                    JOptionPane.showMessageDialog(mainFrame, bundle.getString("error.message.saving.window.size.and.location"),
-                            bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(mainFrame, bundle.getString("error.message.saving.window.size.and.location"), bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                 }
 
                 Locale.setDefault(newLang.getLocale());
@@ -127,11 +138,44 @@ public class MainFrame extends JFrame implements ActionListener {
         });
         optionsFrame.pack();
 
-        int screenWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+        Dimension size = getSize();
+        int frameWidth = size.width;
+        int frameHeight = size.height;
+        Point location = getLocation();
+        int frameLocationX = location.x;
+        int frameLocationY = location.y;
         int optionsWidth = optionsFrame.getWidth();
-        int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
         int optionsHeight = optionsFrame.getHeight();
-        optionsFrame.setLocation((screenWidth - optionsWidth) / 2, (screenHeight - optionsHeight) / 2);
+        int optionsLocationX = frameLocationX + (frameWidth - optionsWidth) / 2;
+        int optionsLocationY = frameLocationY + (frameHeight - optionsHeight) / 2;
+        optionsFrame.setLocation(optionsLocationX, optionsLocationY);
         optionsFrame.setVisible(true);
+    }
+
+    private void importRuleBook() {
+        JFileChooser fileChooser = new JFileChooser();
+        int rtnVal = fileChooser.showOpenDialog(this);
+        if (rtnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                JsonNode jsonNode = objectMapper.readTree(file);
+                JsonNode type = jsonNode.get("type");
+                if (type == null) {
+                    JOptionPane.showMessageDialog(this, "Selected JSON file has no Bunch Type.", bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                } else {
+                    String typeStr = type.asText();
+                    String ruleBookName = BunchType.RULE_BOOK.name();
+                    if (typeStr.equals(ruleBookName)) {
+                        objectMapper.writeValue(Application.generateBunchFile(), jsonNode);
+                        JOptionPane.showMessageDialog(this, "Rule Book has been successfully imported.");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Selected JSON file has an invalid Bunch Type.", bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
@@ -110,5 +111,10 @@ public class Application {
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException e) {
             throw new LoggingException(LOGGER, "Error setting system Look and Feel.", e);
         }
+    }
+
+    public static File generateBunchFile() {
+        File appDir = new File(SystemUtils.USER_HOME, APP_DIR_NAME);
+        return new File(appDir, UUID.randomUUID().toString() + ".json");
     }
 }
