@@ -107,52 +107,21 @@ public class MainFrame extends JFrame implements ActionListener {
     }
 
     private void options() {
-        JFrame optionsFrame = new JFrame();
-        optionsFrame.setTitle(bundle.getString("options.title"));
-        optionsFrame.setResizable(false);
-
-        JPanel optionsPanel = new JPanel();
-        optionsFrame.add(optionsPanel);
-        optionsPanel.setOpaque(false);
-
-        JLabel langLabel = new JLabel(bundle.getString("options.language"));
-        optionsPanel.add(langLabel);
-
         LocaleWrapper[] locales = {new LocaleWrapper(Locale.ENGLISH), new LocaleWrapper(Locale.FRENCH)};
-        JComboBox langComboBox = new JComboBox(locales);
-        optionsPanel.add(langComboBox);
-        langComboBox.setSelectedItem(new LocaleWrapper());
-        MainFrame mainFrame = this;
-        langComboBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                LocaleWrapper newLang = (LocaleWrapper) langComboBox.getSelectedItem();
-                appProps.setProperty("main.frame.language", newLang.getLocale().toLanguageTag());
-                try {
-                    Application.storeProps(appProps);
-                } catch (LoggingException e) {
-                    JOptionPane.showMessageDialog(mainFrame,
-                            bundle.getString("error.message.saving.window.size.and.location"),
-                            bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
-                }
-
-                Locale.setDefault(newLang.getLocale());
-                initComponents();
-                optionsFrame.dispose();
+        LocaleWrapper newLang = (LocaleWrapper) JOptionPane
+                .showInputDialog(this, bundle.getString("options.language"), bundle.getString("options.title"),
+                        JOptionPane.PLAIN_MESSAGE, null, locales, new LocaleWrapper());
+        if (newLang != null) {
+            appProps.setProperty("main.frame.language", newLang.getLocale().toLanguageTag());
+            try {
+                Application.storeProps(appProps);
+            } catch (LoggingException e) {
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.saving.window.size.and.location"),
+                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             }
-        });
-        optionsFrame.pack();
-
-        int frameWidth = getWidth();
-        int frameHeight = getHeight();
-        Point location = getLocation();
-        int frameLocationX = location.x;
-        int frameLocationY = location.y;
-        int optionsWidth = optionsFrame.getWidth();
-        int optionsHeight = optionsFrame.getHeight();
-        int optionsLocationX = frameLocationX + (frameWidth - optionsWidth) / 2;
-        int optionsLocationY = frameLocationY + (frameHeight - optionsHeight) / 2;
-        optionsFrame.setLocation(optionsLocationX, optionsLocationY);
-        optionsFrame.setVisible(true);
+            Locale.setDefault(newLang.getLocale());
+            initComponents();
+        }
     }
 
     private void importRuleBook() {

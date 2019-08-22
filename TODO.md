@@ -1,9 +1,10 @@
 # Things To Do
-* Change options frame to a dialog.
-* Check for existance of rule book before importing.
-  * Overwrite, copy, cancel.
+* New character.
+* Check for existence of rule book before importing.
+  * Overwrite, cancel.
 
 # Things Done
+* Change options frame to a dialog.
 * Better validation when uploading rule book.
 * Better error handling in rule book import.
 
