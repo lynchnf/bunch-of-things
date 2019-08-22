@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -156,6 +157,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
     private void importRuleBook() {
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("menu.rule.book"), "rulebook"));
         int rtnVal = fileChooser.showOpenDialog(this);
         if (rtnVal == JFileChooser.APPROVE_OPTION) {
             File importFile = fileChooser.getSelectedFile();
@@ -164,13 +166,18 @@ public class MainFrame extends JFrame implements ActionListener {
                 JsonNode importJson = objectMapper.readTree(importFile);
                 JsonNode type = importJson.get("type");
                 JsonNode name = importJson.get("name");
-
                 if (type != null && type.asText().equals(BunchType.RULE_BOOK.name()) && name != null &&
                         name.asText().length() > 0) {
                     String fileName = name.asText().toLowerCase().replaceAll("[^a-z]", "_") + ".json";
                     File file = new File(Application.getAppDir(), fileName);
-                    objectMapper.writeValue(file, importJson);
-                    JOptionPane.showMessageDialog(this, bundle.getString("success.message.import.rule.book"));
+                    try {
+                        objectMapper.writeValue(file, importJson);
+                        JOptionPane.showMessageDialog(this, bundle.getString("success.message.import.rule.book"));
+                    } catch (IOException e) {
+                        LOGGER.error("Error writing Rule Book JSON file.", e);
+                        JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
+                                bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
                     JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.rule.book"),
                             bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
