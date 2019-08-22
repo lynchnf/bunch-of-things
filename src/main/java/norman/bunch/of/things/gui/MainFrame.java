@@ -87,9 +87,8 @@ public class MainFrame extends JFrame implements ActionListener {
         if (windowEvent.getSource() == this && windowEvent.getID() == WindowEvent.WINDOW_CLOSING) {
 
             // Get current size and position of UI and remember it.
-            Dimension size = getSize();
-            appProps.setProperty("main.frame.width", Integer.toString(size.width));
-            appProps.setProperty("main.frame.height", Integer.toString(size.height));
+            appProps.setProperty("main.frame.width", Integer.toString(getWidth()));
+            appProps.setProperty("main.frame.height", Integer.toString(getHeight()));
             Point location = getLocation();
             appProps.setProperty("main.frame.location.x", Integer.toString(location.x));
             appProps.setProperty("main.frame.location.y", Integer.toString(location.y));
@@ -98,7 +97,9 @@ public class MainFrame extends JFrame implements ActionListener {
             try {
                 Application.storeProps(appProps);
             } catch (LoggingException e) {
-                JOptionPane.showMessageDialog(this, bundle.getString("error.message.saving.window.size.and.location"), bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showInternalMessageDialog(this,
+                        bundle.getString("error.message.saving.window.size.and.location"),
+                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             }
         }
         super.processWindowEvent(windowEvent);
@@ -128,7 +129,9 @@ public class MainFrame extends JFrame implements ActionListener {
                 try {
                     Application.storeProps(appProps);
                 } catch (LoggingException e) {
-                    JOptionPane.showMessageDialog(mainFrame, bundle.getString("error.message.saving.window.size.and.location"), bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(mainFrame,
+                            bundle.getString("error.message.saving.window.size.and.location"),
+                            bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                 }
 
                 Locale.setDefault(newLang.getLocale());
@@ -138,9 +141,8 @@ public class MainFrame extends JFrame implements ActionListener {
         });
         optionsFrame.pack();
 
-        Dimension size = getSize();
-        int frameWidth = size.width;
-        int frameHeight = size.height;
+        int frameWidth = getWidth();
+        int frameHeight = getHeight();
         Point location = getLocation();
         int frameLocationX = location.x;
         int frameLocationY = location.y;
@@ -156,25 +158,26 @@ public class MainFrame extends JFrame implements ActionListener {
         JFileChooser fileChooser = new JFileChooser();
         int rtnVal = fileChooser.showOpenDialog(this);
         if (rtnVal == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
+            File importFile = fileChooser.getSelectedFile();
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                JsonNode jsonNode = objectMapper.readTree(file);
-                JsonNode type = jsonNode.get("type");
-                if (type == null) {
-                    JOptionPane.showMessageDialog(this, "Selected JSON file has no Bunch Type.", bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                JsonNode importJson = objectMapper.readTree(importFile);
+                JsonNode type = importJson.get("type");
+                JsonNode name = importJson.get("name");
+
+                if (type != null && type.asText().equals(BunchType.RULE_BOOK.name()) && name != null &&
+                        name.asText().length() > 0) {
+                    String fileName = name.asText().toLowerCase().replaceAll("[^a-z]", "_") + ".json";
+                    File file = new File(Application.getAppDir(), fileName);
+                    objectMapper.writeValue(file, importJson);
+                    JOptionPane.showMessageDialog(this, bundle.getString("success.message.import.rule.book"));
                 } else {
-                    String typeStr = type.asText();
-                    String ruleBookName = BunchType.RULE_BOOK.name();
-                    if (typeStr.equals(ruleBookName)) {
-                        objectMapper.writeValue(Application.generateBunchFile(), jsonNode);
-                        JOptionPane.showMessageDialog(this, "Rule Book has been successfully imported.");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Selected JSON file has an invalid Bunch Type.", bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
-                    }
+                    JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.rule.book"),
+                            bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                 }
             } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, e.getMessage(), bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.rule.book"),
+                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             }
         }
     }

@@ -9,7 +9,8 @@ import java.io.InputStream;
 
 public class SetUpExampleData {
     public static void main(String[] args) {
-        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("example-rule-book.json");
+        InputStream inputStream =
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("example-rule-book.json");
         String javaHome = System.getProperty("java.home");
         System.out.println("javaHome=\"" + javaHome + "\"");
         String userHome = System.getProperty("user.home");
@@ -25,6 +26,5 @@ public class SetUpExampleData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }
