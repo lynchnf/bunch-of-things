@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
@@ -28,6 +29,7 @@ public class MainFrame extends JFrame implements ActionListener {
     private JDesktopPane desktop;
     private JMenuItem optionsFileItem;
     private JMenuItem exitFileItem;
+    private JMenuItem newCharacterItem;
     private JMenuItem importRuleBookItem;
 
     public MainFrame(Properties appProps) throws HeadlessException {
@@ -64,6 +66,12 @@ public class MainFrame extends JFrame implements ActionListener {
         fileMenu.add(exitFileItem);
         exitFileItem.addActionListener(this);
 
+        JMenu characterMenu = new JMenu(bundle.getString("menu.character"));
+        menuBar.add(characterMenu);
+        newCharacterItem = new JMenuItem(bundle.getString("menu.character.new"));
+        characterMenu.add(newCharacterItem);
+        newCharacterItem.addActionListener(this);
+
         JMenu ruleBookMenu = new JMenu(bundle.getString("menu.rule.book"));
         menuBar.add(ruleBookMenu);
         importRuleBookItem = new JMenuItem(bundle.getString("menu.rule.book.import"));
@@ -78,6 +86,8 @@ public class MainFrame extends JFrame implements ActionListener {
             processWindowEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         } else if (actionEvent.getSource().equals(optionsFileItem)) {
             options();
+        } else if (actionEvent.getSource().equals(newCharacterItem)) {
+            newCharacter();
         } else if (actionEvent.getSource().equals(importRuleBookItem)) {
             importRuleBook();
         }
@@ -121,6 +131,16 @@ public class MainFrame extends JFrame implements ActionListener {
             }
             Locale.setDefault(newLang.getLocale());
             initComponents();
+        }
+    }
+
+    private void newCharacter() {
+        BunchFrame frame = new BunchFrame(bundle.getString("character.new.title"));
+        frame.setVisible(true);
+        desktop.add(frame);
+        try {
+            frame.setSelected(true);
+        } catch (PropertyVetoException ignored) {
         }
     }
 
