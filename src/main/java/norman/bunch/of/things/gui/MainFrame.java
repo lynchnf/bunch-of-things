@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import norman.bunch.of.things.Application;
 import norman.bunch.of.things.BunchType;
-import norman.bunch.of.things.LocaleWrapper;
 import norman.bunch.of.things.LoggingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +17,7 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class MainFrame extends JFrame implements ActionListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainFrame.class);
@@ -135,12 +132,38 @@ public class MainFrame extends JFrame implements ActionListener {
     }
 
     private void newCharacter() {
-        BunchFrame frame = new BunchFrame(bundle.getString("character.new.title"));
-        frame.setVisible(true);
-        desktop.add(frame);
-        try {
-            frame.setSelected(true);
-        } catch (PropertyVetoException ignored) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, File> ruleBooks = new HashMap<>();
+        for (File ruleBookFile : Application.getAppDir().listFiles()) {
+            try {
+                JsonNode ruleBookJson = objectMapper.readTree(ruleBookFile);
+                JsonNode type = ruleBookJson.get("type");
+                JsonNode name = ruleBookJson.get("name");
+                if (type != null && type.asText().equals(BunchType.RULE_BOOK.name()) && name != null &&
+                        name.asText().length() > 0) {
+                    ruleBooks.put(name.asText(), ruleBookFile);
+                }
+            } catch (IOException ignored) {
+            }
+        }
+        String[] ruleBookNames = ruleBooks.keySet().toArray(new String[ruleBooks.keySet().size()]);
+        Arrays.sort(ruleBookNames);
+        Object selectedRuleBookName = JOptionPane.showInputDialog(this, bundle.getString("character.select.rule.book"),
+                bundle.getString("character.title"), JOptionPane.PLAIN_MESSAGE, null, ruleBookNames, null);
+        if (selectedRuleBookName != null) {
+            File selectedRuleBookFile = ruleBooks.get(selectedRuleBookName);
+            try {
+                JsonNode selectedRuleBookJson = objectMapper.readTree(selectedRuleBookFile);
+                JsonNode uiJson = selectedRuleBookJson.get("ui");
+                BunchFrame frame = new BunchFrame(bundle.getString("character.title"), uiJson);
+                frame.setVisible(true);
+                desktop.add(frame);
+                frame.setSelected(true);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
+                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+            } catch (PropertyVetoException ignored) {
+            }
         }
     }
 
@@ -157,7 +180,7 @@ public class MainFrame extends JFrame implements ActionListener {
                 JsonNode name = importJson.get("name");
                 if (type != null && type.asText().equals(BunchType.RULE_BOOK.name()) && name != null &&
                         name.asText().length() > 0) {
-                    String fileName = name.asText().toLowerCase().replaceAll("[^a-z]", "_") + ".json";
+                    String fileName = "rb_" + name.asText().toLowerCase().replaceAll("[^a-z0-9\\.]", "_") + ".json";
                     File file = new File(Application.getAppDir(), fileName);
                     try {
                         objectMapper.writeValue(file, importJson);

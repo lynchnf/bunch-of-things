@@ -1,4 +1,4 @@
-package norman.bunch.of.things;
+package norman.bunch.of.things.gui;
 
 import java.util.Locale;
 import java.util.Objects;

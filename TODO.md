@@ -2,6 +2,7 @@
 * New character.
 * Check for existence of rule book before importing.
   * Overwrite, cancel.
+* Import dialog should remember the directory of the last selected file.
 
 # Things Done
 * Change options frame to a dialog.
