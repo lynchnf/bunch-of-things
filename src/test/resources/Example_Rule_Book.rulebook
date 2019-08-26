@@ -1,0 +1,218 @@
+{
+    "type": "RULE_BOOK",
+    "name": "Papers and Paychecks first edition",
+    "bunch": {
+        "characterName": "",
+        "playerName": "",
+        "class": "",
+        "muscles": {
+            "value": 10,
+            "points": 0
+        },
+        "brains": {
+            "value": 10,
+            "points": 0
+        },
+        "congeniality": {
+            "value": 10,
+            "points": 0
+        },
+        "clout": {
+            "value": 10,
+            "points": 0
+        },
+        "wealth": {
+            "value": 10,
+            "points": 0
+        },
+        "looks": {
+            "value": 10,
+            "points": 0
+        }
+    },
+    "ui": {
+        "header": {
+            "_gridx": 0,
+            "_gridy": 0,
+            "_gridwidth": 2,
+            "characterNameLabel": {
+                "_gridx": 0,
+                "_gridy": 0,
+                "_component": "JLabel",
+                "_text": "Character Name"
+            },
+            "characterNameText": {
+                "_gridx": 1,
+                "_gridy": 0,
+                "_component": "JTextField",
+                "_columns": 20
+            },
+            "playerNameLabel": {
+                "_gridx": 0,
+                "_gridy": 1,
+                "_component": "JLabel",
+                "_text": "Player Name"
+            },
+            "playerNameText": {
+                "_gridx": 1,
+                "_gridy": 1,
+                "_component": "JTextField",
+                "_columns": 20
+            },
+            "classLabel": {
+                "_gridx": 0,
+                "_gridy": 2,
+                "_component": "JLabel",
+                "_text": "Class"
+            },
+            "classText": {
+                "_gridx": 1,
+                "_gridy": 2,
+                "_component": "JComboBox",
+                "_objects": "Please select...,Jock,Nerd,Popular,Political,Druggie,Model"
+            }
+        },
+        "primaryAttributes": {
+            "_gridx": 0,
+            "_gridy": 1,
+            "musclesLabel": {
+                "_gridx": 0,
+                "_gridy": 0,
+                "_component": "JLabel",
+                "_text": "Muscles"
+            },
+            "musclesValue": {
+                "_gridx": 1,
+                "_gridy": 0,
+                "_component": "JTextField",
+                "_text": "000"
+            },
+            "musclesPoints": {
+                "_gridx": 2,
+                "_gridy": 0,
+                "_component": "JLabel",
+                "_text": "000"
+            },
+            "brainsLabel": {
+                "_gridx": 0,
+                "_gridy": 1,
+                "_component": "JLabel",
+                "_text": "Brains"
+            },
+            "brainsValue": {
+                "_gridx": 1,
+                "_gridy": 1,
+                "_component": "JTextField",
+                "_text": "000"
+            },
+            "brainsPoints": {
+                "_gridx": 2,
+                "_gridy": 1,
+                "_component": "JLabel",
+                "_text": "000"
+            },
+            "congenialityLabel": {
+                "_gridx": 0,
+                "_gridy": 2,
+                "_component": "JLabel",
+                "_text": "Congeniality"
+            },
+            "congenialityValue": {
+                "_gridx": 1,
+                "_gridy": 2,
+                "_component": "JTextField",
+                "_text": "000"
+            },
+            "congenialityPoints": {
+                "_gridx": 2,
+                "_gridy": 2,
+                "_component": "JLabel",
+                "_text": "000"
+            },
+            "cloutLabel": {
+                "_gridx": 0,
+                "_gridy": 3,
+                "_component": "JLabel",
+                "_text": "Clout"
+            },
+            "cloutValue": {
+                "_gridx": 1,
+                "_gridy": 3,
+                "_component": "JTextField",
+                "_text": "000"
+            },
+            "cloutPoints": {
+                "_gridx": 2,
+                "_gridy": 3,
+                "_component": "JLabel",
+                "_text": "000"
+            },
+            "wealthLabel": {
+                "_gridx": 0,
+                "_gridy": 4,
+                "_component": "JLabel",
+                "_text": "Wealth"
+            },
+            "wealthValue": {
+                "_gridx": 1,
+                "_gridy": 4,
+                "_component": "JTextField",
+                "_text": "000"
+            },
+            "wealthPoints": {
+                "_gridx": 2,
+                "_gridy": 4,
+                "_component": "JLabel",
+                "_text": "000"
+            },
+            "looksLabel": {
+                "_gridx": 0,
+                "_gridy": 5,
+                "_component": "JLabel",
+                "_text": "Looks"
+            },
+            "looksValue": {
+                "_gridx": 1,
+                "_gridy": 5,
+                "_component": "JTextField",
+                "_text": "000"
+            },
+            "looksPoints": {
+                "_gridx": 2,
+                "_gridy": 5,
+                "_component": "JLabel",
+                "_text": "000"
+            }
+        },
+        "secondaryAttributes": {
+            "_gridx": 1,
+            "_gridy": 1,
+            "label": {
+                "_gridx": 0,
+                "_gridy": 0,
+                "_component": "JLabel",
+                "_text": "More stuff goes here"
+            },
+            "checkbox": {
+                "_gridx": 0,
+                "_gridy": 1,
+                "_component": "JCheckBox"
+            },
+            "radiobutton": {
+                "_gridx": 0,
+                "_gridy": 2,
+                "_component": "JRadioButton"
+            },
+            "spinner": {
+                "_gridx": 0,
+                "_gridy": 3,
+                "_component": "JSpinner"
+            },
+            "textarea": {
+                "_gridx": 0,
+                "_gridy": 4,
+                "_component": "JTextArea"
+            }
+        }
+    }
+}

@@ -6,11 +6,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Iterator;
 import java.util.Map;
 
-public class BunchFrame extends JInternalFrame {
+public class BunchFrame extends JInternalFrame implements ItemListener, ActionListener, ChangeListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(BunchFrame.class);
     private static final boolean RESIZABLE = false;
     private static final boolean CLOSABLE = true;
@@ -25,32 +31,51 @@ public class BunchFrame extends JInternalFrame {
         Container contentPane = new JPanel(new GridBagLayout());
         setContentPane(contentPane);
 
-        Iterator<JsonNode> uiIterator = uiJson.iterator();
         ObjectMapper objectMapper = new ObjectMapper();
-        while (uiIterator.hasNext()) {
-            JsonNode node = uiIterator.next();
+        Iterator<String> fieldNameIterator = uiJson.fieldNames();
+        while (fieldNameIterator.hasNext()) {
+            String fieldName = fieldNameIterator.next();
+            JsonNode node = uiJson.get(fieldName);
             Map map = objectMapper.convertValue(node, Map.class);
-            addUiComponent(contentPane, map);
+            addUiComponent(contentPane, map, fieldName);
         }
         pack();
     }
 
-    private void addUiComponent(Container container, Map map) {
+    private void addUiComponent(Container container, Map map, String name) {
         JComponent component = null;
         if (map.containsKey("_component")) {
             Object value = map.get("_component");
-            if (value.equals(ComponentType.JLabel.name())) {
+            if (value.equals(ComponentType.JCheckBox.name())) {
+                component = new JCheckBox();
+                JCheckBox checkBox = (JCheckBox) component;
+                checkBox.addItemListener(this);
+            } else if (value.equals(ComponentType.JRadioButton.name())) {
+                component = new JRadioButton();
+            } else if (value.equals(ComponentType.JComboBox.name())) {
+                component = new JComboBox();
+                JComboBox comboBox = (JComboBox) component;
+                comboBox.addActionListener(this);
+            } else if (value.equals(ComponentType.JLabel.name())) {
                 component = new JLabel();
+            } else if (value.equals(ComponentType.JSpinner.name())) {
+                component = new JSpinner();
+                JSpinner spinner = (JSpinner) component;
+                spinner.addChangeListener(this);
+            } else if (value.equals(ComponentType.JTextArea.name())) {
+                component = new JTextArea();
             } else if (value.equals(ComponentType.JTextField.name())) {
                 component = new JTextField();
-            } else if (value.equals(ComponentType.JButton.name())) {
-                component = new JButton();
+            } else {
+                // FIXME Throw exception.
+                LOGGER.error("Invalid component type=" + value);
             }
             component.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             map.remove("_component");
         } else {
             component = new JPanel(new GridBagLayout());
         }
+        component.setName(name);
 
         if (map.containsKey("_text")) {
             String value = map.get("_text").toString();
@@ -58,8 +83,6 @@ public class BunchFrame extends JInternalFrame {
                 ((JLabel) component).setText(value);
             } else if (component instanceof JTextField) {
                 ((JTextField) component).setText(value);
-            } else if (component instanceof JButton) {
-                ((JButton) component).setText(value);
             }
             map.remove("_text");
         }
@@ -70,6 +93,22 @@ public class BunchFrame extends JInternalFrame {
                 ((JTextField) component).setColumns(value);
             }
             map.remove("_columns");
+        }
+
+        if (map.containsKey("_objects")) {
+            String[] values = map.get("_objects").toString().split(",");
+            if (component instanceof JComboBox) {
+                ((JComboBox) component).setModel(new DefaultComboBoxModel(values));
+            }
+            map.remove("_objects");
+        }
+
+        if (map.containsKey("_selectedObject")) {
+            String value = map.get("_selectedObject").toString();
+            if (component instanceof JComboBox) {
+                ((JComboBox) component).setSelectedItem(value);
+            }
+            map.remove("_selectedObject");
         }
 
         // Grid Bag Constraint parameters.
@@ -242,8 +281,30 @@ public class BunchFrame extends JInternalFrame {
         if (map.size() > 0) {
             for (Object key : map.keySet()) {
                 Map value = (Map) map.get(key);
-                addUiComponent(component, value);
+                addUiComponent(component, value, name + "." + key.toString());
             }
         }
+    }
+
+    @Override
+    public void itemStateChanged(ItemEvent itemEvent) {
+        LOGGER.debug("itemEvent=\"" + itemEvent + "\"");
+        LOGGER.debug("itemEvent.source.name=\"" + ((JComponent) itemEvent.getSource()).getName() + "\"");
+        LOGGER.debug("itemEvent.stateChange=\"" + itemEvent.getStateChange() + "\"");
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        LOGGER.debug("actionEvent=\"" + actionEvent + "\"");
+        LOGGER.debug("actionEvent.source.name=\"" + ((JComponent) actionEvent.getSource()).getName() + "\"");
+        LOGGER.debug(
+                "actionEvent.source.selectedItem=\"" + ((JComboBox) actionEvent.getSource()).getSelectedItem() + "\"");
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent changeEvent) {
+        LOGGER.debug("changeEvent=\"" + changeEvent + "\"");
+        LOGGER.debug("changeEvent.source.name=\"" + ((JComponent) changeEvent.getSource()).getName() + "\"");
+        LOGGER.debug("changeEvent.source.value=\"" + ((JSpinner) changeEvent.getSource()).getValue() + "\"");
     }
 }

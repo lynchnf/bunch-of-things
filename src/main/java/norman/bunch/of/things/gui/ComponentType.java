@@ -1,5 +1,5 @@
 package norman.bunch.of.things.gui;
 
 public enum ComponentType {
-    JLabel, JTextField, JButton
+    JCheckBox, JRadioButton, JComboBox, JLabel, JSpinner, JTextArea, JTextField
 }
