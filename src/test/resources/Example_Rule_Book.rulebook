@@ -84,14 +84,14 @@
             "musclesValue": {
                 "_gridx": 1,
                 "_gridy": 0,
-                "_component": "JTextField",
-                "_text": "000"
+                "_component": "JSpinner",
+                "_value": 10
             },
             "musclesPoints": {
                 "_gridx": 2,
                 "_gridy": 0,
                 "_component": "JLabel",
-                "_text": "000"
+                "_text": "0"
             },
             "brainsLabel": {
                 "_gridx": 0,
@@ -102,14 +102,14 @@
             "brainsValue": {
                 "_gridx": 1,
                 "_gridy": 1,
-                "_component": "JTextField",
-                "_text": "000"
+                "_component": "JSpinner",
+                "_value": 10
             },
             "brainsPoints": {
                 "_gridx": 2,
                 "_gridy": 1,
                 "_component": "JLabel",
-                "_text": "000"
+                "_text": "0"
             },
             "congenialityLabel": {
                 "_gridx": 0,
@@ -120,14 +120,14 @@
             "congenialityValue": {
                 "_gridx": 1,
                 "_gridy": 2,
-                "_component": "JTextField",
-                "_text": "000"
+                "_component": "JSpinner",
+                "_value": 10
             },
             "congenialityPoints": {
                 "_gridx": 2,
                 "_gridy": 2,
                 "_component": "JLabel",
-                "_text": "000"
+                "_text": "0"
             },
             "cloutLabel": {
                 "_gridx": 0,
@@ -138,14 +138,14 @@
             "cloutValue": {
                 "_gridx": 1,
                 "_gridy": 3,
-                "_component": "JTextField",
-                "_text": "000"
+                "_component": "JSpinner",
+                "_value": 10
             },
             "cloutPoints": {
                 "_gridx": 2,
                 "_gridy": 3,
                 "_component": "JLabel",
-                "_text": "000"
+                "_text": "0"
             },
             "wealthLabel": {
                 "_gridx": 0,
@@ -156,14 +156,14 @@
             "wealthValue": {
                 "_gridx": 1,
                 "_gridy": 4,
-                "_component": "JTextField",
-                "_text": "000"
+                "_component": "JSpinner",
+                "_value": 10
             },
             "wealthPoints": {
                 "_gridx": 2,
                 "_gridy": 4,
                 "_component": "JLabel",
-                "_text": "000"
+                "_text": "0"
             },
             "looksLabel": {
                 "_gridx": 0,
@@ -174,44 +174,52 @@
             "looksValue": {
                 "_gridx": 1,
                 "_gridy": 5,
-                "_component": "JTextField",
-                "_text": "000"
+                "_component": "JSpinner",
+                "_value": 10
             },
             "looksPoints": {
                 "_gridx": 2,
                 "_gridy": 5,
                 "_component": "JLabel",
-                "_text": "000"
+                "_text": "0"
             }
         },
         "secondaryAttributes": {
             "_gridx": 1,
             "_gridy": 1,
-            "label": {
-                "_gridx": 0,
-                "_gridy": 0,
-                "_component": "JLabel",
-                "_text": "More stuff goes here"
-            },
             "checkbox": {
                 "_gridx": 0,
-                "_gridy": 1,
-                "_component": "JCheckBox"
+                "_gridy": 0,
+                "_component": "JCheckBox",
+                "_text": "Check Box"
             },
-            "radiobutton": {
+            "radiobutton1": {
+                "_gridx": 0,
+                "_gridy": 1,
+                "_component": "JRadioButton",
+                "_text": "Radio Button One",
+                "_buttonGroup": "group1"
+            },
+            "radiobutton2": {
                 "_gridx": 0,
                 "_gridy": 2,
-                "_component": "JRadioButton"
+                "_component": "JRadioButton",
+                "_text": "Radio Button Two",
+                "_buttonGroup": "group1"
             },
-            "spinner": {
+            "radiobutton3": {
                 "_gridx": 0,
                 "_gridy": 3,
-                "_component": "JSpinner"
+                "_component": "JRadioButton",
+                "_text": "Radio Button Three",
+                "_buttonGroup": "group1"
             },
             "textarea": {
                 "_gridx": 0,
                 "_gridy": 4,
-                "_component": "JTextArea"
+                "_component": "JTextArea",
+                "_rows": 3,
+                "_columns": 10
             }
         }
     }

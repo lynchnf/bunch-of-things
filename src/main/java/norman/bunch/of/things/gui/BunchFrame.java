@@ -2,30 +2,39 @@ package norman.bunch.of.things.gui;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import norman.bunch.of.things.LoggingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.ResourceBundle;
 
-public class BunchFrame extends JInternalFrame implements ItemListener, ActionListener, ChangeListener {
+public class BunchFrame extends JInternalFrame
+        implements ItemListener, ActionListener, ChangeListener, DocumentListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(BunchFrame.class);
     private static final boolean RESIZABLE = false;
     private static final boolean CLOSABLE = true;
     private static final boolean MAXIMIZABLE = false;
     private static final boolean ICONIFIABLE = true;
     private static int openOffset = 0;
+    private ResourceBundle bundle;
+    private Map<String, ButtonGroup> buttonGroups = new HashMap<>();
 
     public BunchFrame(String title, JsonNode uiJson) {
         super(title, RESIZABLE, CLOSABLE, MAXIMIZABLE, ICONIFIABLE);
+        bundle = ResourceBundle.getBundle("norman.bunch.of.things.gui.BunchFrame");
         setLocation(openOffset, openOffset);
         openOffset += 30;
         Container contentPane = new JPanel(new GridBagLayout());
@@ -33,42 +42,81 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
 
         ObjectMapper objectMapper = new ObjectMapper();
         Iterator<String> fieldNameIterator = uiJson.fieldNames();
-        while (fieldNameIterator.hasNext()) {
-            String fieldName = fieldNameIterator.next();
-            JsonNode node = uiJson.get(fieldName);
-            Map map = objectMapper.convertValue(node, Map.class);
-            addUiComponent(contentPane, map, fieldName);
+        try {
+            while (fieldNameIterator.hasNext()) {
+                String fieldName = fieldNameIterator.next();
+                JsonNode node = uiJson.get(fieldName);
+                Map map = objectMapper.convertValue(node, Map.class);
+                addUiComponent(contentPane, map, fieldName);
+            }
+            pack();
+        } catch (LoggingException e) {
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.ui.config"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
-        pack();
     }
 
-    private void addUiComponent(Container container, Map map, String name) {
-        JComponent component = null;
+    private void addUiComponent(Container container, Map map, String name) throws LoggingException {
+        JComponent component = createComponent(map, name);
+        addComponentProperties(map, name, component);
+        GridBagConstraints constraints = createContraints(map);
+        container.add(component, constraints);
+
+        // If the map is empty, that's all folks. If not, drill down.
+        if (map.size() > 0) {
+            for (Object key : map.keySet()) {
+                Map value = (Map) map.get(key);
+                addUiComponent(component, value, name + "." + key.toString());
+            }
+        }
+    }
+
+    private JComponent createComponent(Map map, String name) throws LoggingException {
+        JComponent component;
         if (map.containsKey("_component")) {
             Object value = map.get("_component");
             if (value.equals(ComponentType.JCheckBox.name())) {
-                component = new JCheckBox();
-                JCheckBox checkBox = (JCheckBox) component;
+                JCheckBox checkBox = new JCheckBox();
                 checkBox.addItemListener(this);
-            } else if (value.equals(ComponentType.JRadioButton.name())) {
-                component = new JRadioButton();
+                //ThingToggleButtonModel model = new ThingToggleButtonModel(checkBox);
+                //checkBox.setModel(model);
+                //model.addPropertyChangeListener(this);
+                component = checkBox;
             } else if (value.equals(ComponentType.JComboBox.name())) {
-                component = new JComboBox();
-                JComboBox comboBox = (JComboBox) component;
+                JComboBox<String> comboBox = new JComboBox<>();
                 comboBox.addActionListener(this);
+                //ThingComboBoxModel model = new ThingComboBoxModel(comboBox);
+                //comboBox.setModel(model);
+                //model.addPropertyChangeListener(this);
+                component = comboBox;
             } else if (value.equals(ComponentType.JLabel.name())) {
                 component = new JLabel();
+            } else if (value.equals(ComponentType.JRadioButton.name())) {
+                JRadioButton radioButton = new JRadioButton();
+                radioButton.addItemListener(this);
+                //ThingToggleButtonModel model = new ThingToggleButtonModel(radioButton);
+                //radioButton.setModel(model);
+                //model.addPropertyChangeListener(this);
+                component = radioButton;
             } else if (value.equals(ComponentType.JSpinner.name())) {
-                component = new JSpinner();
-                JSpinner spinner = (JSpinner) component;
+                JSpinner spinner = new JSpinner();
                 spinner.addChangeListener(this);
+                //ThingSpinnerNumberModel model = new ThingSpinnerNumberModel(spinner);
+                //spinner.setModel(model);
+                //model.addPropertyChangeListener(this);
+                component = spinner;
             } else if (value.equals(ComponentType.JTextArea.name())) {
-                component = new JTextArea();
+                JTextArea textArea = new JTextArea();
+                textArea.getDocument().addDocumentListener(this);
+                //textArea.addPropertyChangeListener(this);
+                component = textArea;
             } else if (value.equals(ComponentType.JTextField.name())) {
-                component = new JTextField();
+                JTextField textField = new JTextField();
+                textField.addActionListener(this);
+                //textField.addPropertyChangeListener(this);
+                component = textField;
             } else {
-                // FIXME Throw exception.
-                LOGGER.error("Invalid component type=" + value);
+                throw new LoggingException(LOGGER, "Invalid component type=" + value);
             }
             component.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             map.remove("_component");
@@ -76,21 +124,37 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
             component = new JPanel(new GridBagLayout());
         }
         component.setName(name);
+        return component;
+    }
 
-        if (map.containsKey("_text")) {
-            String value = map.get("_text").toString();
-            if (component instanceof JLabel) {
-                ((JLabel) component).setText(value);
-            } else if (component instanceof JTextField) {
-                ((JTextField) component).setText(value);
+    private void addComponentProperties(Map map, String name, JComponent component) {
+        if (map.containsKey("_buttonGroup")) {
+            String value = map.get("_buttonGroup").toString();
+            if (component instanceof JRadioButton) {
+                ButtonGroup buttonGroup = null;
+                if (buttonGroups.containsKey(value)) {
+                    buttonGroup = buttonGroups.get(value);
+                } else {
+                    buttonGroup = new ButtonGroup();
+                    buttonGroups.put(value, buttonGroup);
+                }
+                buttonGroup.add((JRadioButton) component);
+            } else {
+                LOGGER.warn(
+                        "Property _buttonGroup ignored for component " + name + " because it it not a JRadioButton.");
             }
-            map.remove("_text");
+            map.remove("_buttonGroup");
         }
 
         if (map.containsKey("_columns")) {
             int value = Integer.parseInt(map.get("_columns").toString());
-            if (component instanceof JTextField) {
+            if (component instanceof JTextArea) {
+                ((JTextArea) component).setColumns(value);
+            } else if (component instanceof JTextField) {
                 ((JTextField) component).setColumns(value);
+            } else {
+                LOGGER.warn("Property _columns ignored for component " + name +
+                        " because it it not a JTextArea or JTextField.");
             }
             map.remove("_columns");
         }
@@ -98,20 +162,81 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
         if (map.containsKey("_objects")) {
             String[] values = map.get("_objects").toString().split(",");
             if (component instanceof JComboBox) {
-                ((JComboBox) component).setModel(new DefaultComboBoxModel(values));
+                JComboBox<String> comboBox = (JComboBox<String>) component;
+                DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) comboBox.getModel();
+                for (String value : values) {
+                    model.addElement(value);
+                }
+            } else {
+                LOGGER.warn("Property _objects ignored for component " + name + " because it it not a JComboBox.");
             }
             map.remove("_objects");
+        }
+
+        if (map.containsKey("_rows")) {
+            int value = Integer.parseInt(map.get("_rows").toString());
+            if (component instanceof JTextArea) {
+                ((JTextArea) component).setRows(value);
+            } else {
+                LOGGER.warn("Property _rows ignored for component " + name + " because it it not a JTextArea.");
+            }
+            map.remove("_rows");
+        }
+
+        if (map.containsKey("_selected")) {
+            boolean value = Boolean.parseBoolean(map.get("_selected").toString());
+            if (component instanceof JCheckBox) {
+                ((JCheckBox) component).setSelected(value);
+            } else if (component instanceof JRadioButton) {
+                ((JRadioButton) component).setSelected(value);
+            } else {
+                LOGGER.warn("Property _selected ignored for component " + name +
+                        " because it it not a JCheckBox or JRadioButton.");
+            }
+            map.remove("_selected");
         }
 
         if (map.containsKey("_selectedObject")) {
             String value = map.get("_selectedObject").toString();
             if (component instanceof JComboBox) {
                 ((JComboBox) component).setSelectedItem(value);
+            } else {
+                LOGGER.warn(
+                        "Property _selectedObject ignored for component " + name + " because it it not a JComboBox.");
             }
             map.remove("_selectedObject");
         }
 
-        // Grid Bag Constraint parameters.
+        if (map.containsKey("_text")) {
+            String value = map.get("_text").toString();
+            if (component instanceof JCheckBox) {
+                ((JCheckBox) component).setText(value);
+            } else if (component instanceof JLabel) {
+                ((JLabel) component).setText(value);
+            } else if (component instanceof JRadioButton) {
+                ((JRadioButton) component).setText(value);
+            } else if (component instanceof JTextField) {
+                ((JTextField) component).setText(value);
+            } else {
+                LOGGER.warn("Property _text ignored for component " + name +
+                        " because it it not a JCheckBox, JLabel, JRadioButton, or JTextField.");
+            }
+            map.remove("_text");
+        }
+
+        if (map.containsKey("_value")) {
+            int value = Integer.parseInt(map.get("_value").toString());
+            if (component instanceof JSpinner) {
+                ((JSpinner) component).setValue(value);
+            } else {
+                LOGGER.warn("Property _value ignored for component " + name + " because it it not a JSpinner.");
+            }
+            map.remove("_value");
+        }
+    }
+
+    private GridBagConstraints createContraints(Map map) throws LoggingException {
+        // Extract constraint properties from map.
         Integer gridx = null;
         if (map.containsKey("_gridx")) {
             gridx = Integer.valueOf(map.get("_gridx").toString());
@@ -169,6 +294,8 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
                 anchor = GridBagConstraints.PAGE_END;
             } else if (value.equals(GridBagConstraintsAnchor.LAST_LINE_END.name())) {
                 anchor = GridBagConstraints.LAST_LINE_END;
+            } else {
+                throw new LoggingException(LOGGER, "Invalid _anchor=" + value);
             }
             map.remove("_anchor");
         }
@@ -184,6 +311,8 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
                 anchor = GridBagConstraints.VERTICAL;
             } else if (value.equals(GridBagConstraintsFill.BOTH.name())) {
                 anchor = GridBagConstraints.BOTH;
+            } else {
+                throw new LoggingException(LOGGER, "Invalid _fill=" + value);
             }
             map.remove("_fill");
         }
@@ -224,6 +353,7 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
             map.remove("_ipady");
         }
 
+        // Create constraints with default properties.
         GridBagConstraints constraints = new GridBagConstraints();
         if (map.size() > 0) {
             constraints.anchor = GridBagConstraints.FIRST_LINE_START;
@@ -233,6 +363,7 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
             constraints.ipady = 2;
         }
 
+        // Apply extracted properties to constraints.
         if (gridx != null) {
             constraints.gridx = gridx;
         }
@@ -275,36 +406,54 @@ public class BunchFrame extends JInternalFrame implements ItemListener, ActionLi
         if (ipady != null) {
             constraints.ipady = ipady;
         }
+        return constraints;
+    }
 
-        container.add(component, constraints);
-
-        if (map.size() > 0) {
-            for (Object key : map.keySet()) {
-                Map value = (Map) map.get(key);
-                addUiComponent(component, value, name + "." + key.toString());
-            }
-        }
+    private void changeThing(String uiComponentName, Object value) {
+        LOGGER.debug("Property changed, source=\"" + uiComponentName + "\", value=\"" + value + "\"");
     }
 
     @Override
     public void itemStateChanged(ItemEvent itemEvent) {
-        LOGGER.debug("itemEvent=\"" + itemEvent + "\"");
-        LOGGER.debug("itemEvent.source.name=\"" + ((JComponent) itemEvent.getSource()).getName() + "\"");
-        LOGGER.debug("itemEvent.stateChange=\"" + itemEvent.getStateChange() + "\"");
+        changeThing(((JComponent) itemEvent.getSource()).getName(),
+                Boolean.valueOf((itemEvent.getStateChange() == ItemEvent.SELECTED)));
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        LOGGER.debug("actionEvent=\"" + actionEvent + "\"");
-        LOGGER.debug("actionEvent.source.name=\"" + ((JComponent) actionEvent.getSource()).getName() + "\"");
-        LOGGER.debug(
-                "actionEvent.source.selectedItem=\"" + ((JComboBox) actionEvent.getSource()).getSelectedItem() + "\"");
+        Object source = actionEvent.getSource();
+        if (source instanceof JComboBox) {
+            JComboBox<String> comboBox = (JComboBox<String>) source;
+            changeThing(comboBox.getName(), comboBox.getSelectedItem());
+        } else if (source instanceof JTextField) {
+            JTextField textField = (JTextField) source;
+            changeThing(textField.getName(), textField.getText());
+        }
     }
 
     @Override
     public void stateChanged(ChangeEvent changeEvent) {
-        LOGGER.debug("changeEvent=\"" + changeEvent + "\"");
-        LOGGER.debug("changeEvent.source.name=\"" + ((JComponent) changeEvent.getSource()).getName() + "\"");
-        LOGGER.debug("changeEvent.source.value=\"" + ((JSpinner) changeEvent.getSource()).getValue() + "\"");
+        Object source = changeEvent.getSource();
+        if (source instanceof JSpinner) {
+            JSpinner spinner = (JSpinner) source;
+            changeThing(spinner.getName(), spinner.getValue());
+        } else {
+            changeThing(((JComponent) source).getName(), changeEvent);
+        }
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent documentEvent) {
+        LOGGER.debug("documentEvent=\"" + documentEvent + "\"");
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent documentEvent) {
+        LOGGER.debug("documentEvent=\"" + documentEvent + "\"");
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent documentEvent) {
+        LOGGER.debug("documentEvent=\"" + documentEvent + "\"");
     }
 }
