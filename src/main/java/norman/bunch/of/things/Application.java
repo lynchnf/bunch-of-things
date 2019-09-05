@@ -24,8 +24,7 @@ public class Application {
 
         final Properties appProps = new Properties();
 
-        // Load properties and set Look and Feel. If there's an error, there's not
-        // much I an do about it except rethrow it as a run time exception.
+        // Load properties and set Look and Feel. If there's an error, there's not much I an do about it except rethrow it as a run time exception.
         try {
             appProps.putAll(loadProps());
             setLookAndFeel();

@@ -1,36 +1,7 @@
 {
-    "type": "RULE_BOOK",
-    "name": "Papers and Paychecks first edition",
-    "bunch": {
-        "characterName": "",
-        "playerName": "",
-        "class": "",
-        "muscles": {
-            "value": 10,
-            "points": 0
-        },
-        "brains": {
-            "value": 10,
-            "points": 0
-        },
-        "congeniality": {
-            "value": 10,
-            "points": 0
-        },
-        "clout": {
-            "value": 10,
-            "points": 0
-        },
-        "wealth": {
-            "value": 10,
-            "points": 0
-        },
-        "looks": {
-            "value": 10,
-            "points": 0
-        }
-    },
-    "ui": {
+    "type": "GAME_BOOK",
+    "name": "Papers and Paychecks Core Rules, first edition",
+    "gui": {
         "header": {
             "_gridx": 0,
             "_gridy": 0,
@@ -222,5 +193,26 @@
                 "_columns": 10
             }
         }
+    },
+    "newCharacter": {
+        "characterName": "",
+        "playerName": "",
+        "class": "",
+        "musclesValue": 10,
+        "musclesPoints": 0,
+        "brainsValue": 10,
+        "brainsPoints": 0,
+        "congenialityValue": 10,
+        "congenialityPoints": 0,
+        "cloutValue": 10,
+        "cloutPoints": 0,
+        "wealthValue": 10,
+        "wealthPoints": 0,
+        "looksValue": 10,
+        "looksPoints": 0,
+        "checkbox": false,
+        "radiobutton": "",
+        "textarea": "",
+        "floatValue": -12.34
     }
 }

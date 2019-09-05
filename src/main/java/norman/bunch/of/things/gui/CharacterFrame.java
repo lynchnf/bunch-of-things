@@ -3,6 +3,8 @@ package norman.bunch.of.things.gui;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import norman.bunch.of.things.LoggingException;
+import norman.bunch.of.things.bunch.Bunch;
+import norman.bunch.of.things.gui.model.CharacterPlainDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +13,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,9 +24,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class BunchFrame extends JInternalFrame
+public class CharacterFrame extends JInternalFrame
         implements ItemListener, ActionListener, ChangeListener, DocumentListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BunchFrame.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CharacterFrame.class);
     private static final boolean RESIZABLE = false;
     private static final boolean CLOSABLE = true;
     private static final boolean MAXIMIZABLE = false;
@@ -32,28 +35,59 @@ public class BunchFrame extends JInternalFrame
     private ResourceBundle bundle;
     private Map<String, ButtonGroup> buttonGroups = new HashMap<>();
 
-    public BunchFrame(String title, JsonNode uiJson) {
+    public CharacterFrame(String title, JsonNode gameBookJson) {
         super(title, RESIZABLE, CLOSABLE, MAXIMIZABLE, ICONIFIABLE);
-        bundle = ResourceBundle.getBundle("norman.bunch.of.things.gui.BunchFrame");
+        bundle = ResourceBundle.getBundle("norman.bunch.of.things.gui.CharacterFrame");
         setLocation(openOffset, openOffset);
         openOffset += 30;
         Container contentPane = new JPanel(new GridBagLayout());
         setContentPane(contentPane);
 
+        // Create GUI.
         ObjectMapper objectMapper = new ObjectMapper();
-        Iterator<String> fieldNameIterator = uiJson.fieldNames();
+        JsonNode uiJson = gameBookJson.get("gui");
+        Iterator<String> uiFieldNameIterator = uiJson.fieldNames();
         try {
-            while (fieldNameIterator.hasNext()) {
-                String fieldName = fieldNameIterator.next();
+            while (uiFieldNameIterator.hasNext()) {
+                String fieldName = uiFieldNameIterator.next();
                 JsonNode node = uiJson.get(fieldName);
                 Map map = objectMapper.convertValue(node, Map.class);
                 addUiComponent(contentPane, map, fieldName);
             }
             pack();
         } catch (LoggingException e) {
-            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.ui.config"),
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.gui.config"),
                     bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
+
+        // Create a new character from the template.
+        JsonNode newCharacterJson = gameBookJson.get("newCharacter");
+        Bunch bunch = new Bunch();
+        Iterator<String> newCharacterFieldNamesIterator = newCharacterJson.fieldNames();
+        while (newCharacterFieldNamesIterator.hasNext()) {
+            String id = newCharacterFieldNamesIterator.next();
+            JsonNode valueJson = newCharacterJson.get(id);
+            if (valueJson.isBoolean()) {
+                bunch.addThing(id, valueJson.booleanValue());
+            } else if (valueJson.isDouble()) {
+                bunch.addThing(id, valueJson.doubleValue());
+            } else if (valueJson.isInt()) {
+                bunch.addThing(id, valueJson.intValue());
+            } else if (valueJson.isTextual()) {
+                bunch.addThing(id, valueJson.textValue());
+            } else {
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.character.value"),
+                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+                LOGGER.error("Invalid value for character property, id=" + id + ", valueJson=" + valueJson);
+            }
+        }
+    }
+
+    public void oldCharacterFrame(String title, JsonNode gameBookJson) {
+
+        // Create a rule service
+
+        // Bind UI and Bunch of Things.
     }
 
     private void addUiComponent(Container container, Map map, String name) throws LoggingException {
@@ -78,42 +112,32 @@ public class BunchFrame extends JInternalFrame
             if (value.equals(ComponentType.JCheckBox.name())) {
                 JCheckBox checkBox = new JCheckBox();
                 checkBox.addItemListener(this);
-                //ThingToggleButtonModel model = new ThingToggleButtonModel(checkBox);
-                //checkBox.setModel(model);
-                //model.addPropertyChangeListener(this);
                 component = checkBox;
             } else if (value.equals(ComponentType.JComboBox.name())) {
                 JComboBox<String> comboBox = new JComboBox<>();
                 comboBox.addActionListener(this);
-                //ThingComboBoxModel model = new ThingComboBoxModel(comboBox);
-                //comboBox.setModel(model);
-                //model.addPropertyChangeListener(this);
                 component = comboBox;
             } else if (value.equals(ComponentType.JLabel.name())) {
                 component = new JLabel();
             } else if (value.equals(ComponentType.JRadioButton.name())) {
                 JRadioButton radioButton = new JRadioButton();
                 radioButton.addItemListener(this);
-                //ThingToggleButtonModel model = new ThingToggleButtonModel(radioButton);
-                //radioButton.setModel(model);
-                //model.addPropertyChangeListener(this);
                 component = radioButton;
             } else if (value.equals(ComponentType.JSpinner.name())) {
                 JSpinner spinner = new JSpinner();
                 spinner.addChangeListener(this);
-                //ThingSpinnerNumberModel model = new ThingSpinnerNumberModel(spinner);
-                //spinner.setModel(model);
-                //model.addPropertyChangeListener(this);
                 component = spinner;
             } else if (value.equals(ComponentType.JTextArea.name())) {
                 JTextArea textArea = new JTextArea();
-                textArea.getDocument().addDocumentListener(this);
-                //textArea.addPropertyChangeListener(this);
+                Document document = new CharacterPlainDocument(textArea);
+                textArea.setDocument(document);
+                document.addDocumentListener(this);
                 component = textArea;
             } else if (value.equals(ComponentType.JTextField.name())) {
                 JTextField textField = new JTextField();
-                textField.addActionListener(this);
-                //textField.addPropertyChangeListener(this);
+                Document document = new CharacterPlainDocument(textField);
+                textField.setDocument(document);
+                document.addDocumentListener(this);
                 component = textField;
             } else {
                 throw new LoggingException(LOGGER, "Invalid component type=" + value);
@@ -409,10 +433,6 @@ public class BunchFrame extends JInternalFrame
         return constraints;
     }
 
-    private void changeThing(String uiComponentName, Object value) {
-        LOGGER.debug("Property changed, source=\"" + uiComponentName + "\", value=\"" + value + "\"");
-    }
-
     @Override
     public void itemStateChanged(ItemEvent itemEvent) {
         changeThing(((JComponent) itemEvent.getSource()).getName(),
@@ -425,9 +445,8 @@ public class BunchFrame extends JInternalFrame
         if (source instanceof JComboBox) {
             JComboBox<String> comboBox = (JComboBox<String>) source;
             changeThing(comboBox.getName(), comboBox.getSelectedItem());
-        } else if (source instanceof JTextField) {
-            JTextField textField = (JTextField) source;
-            changeThing(textField.getName(), textField.getText());
+        } else {
+            changeThing(((JComponent) source).getName(), actionEvent);
         }
     }
 
@@ -444,16 +463,34 @@ public class BunchFrame extends JInternalFrame
 
     @Override
     public void insertUpdate(DocumentEvent documentEvent) {
-        LOGGER.debug("documentEvent=\"" + documentEvent + "\"");
+        documentUpdate(documentEvent);
     }
 
     @Override
     public void removeUpdate(DocumentEvent documentEvent) {
-        LOGGER.debug("documentEvent=\"" + documentEvent + "\"");
+        documentUpdate(documentEvent);
     }
 
     @Override
     public void changedUpdate(DocumentEvent documentEvent) {
-        LOGGER.debug("documentEvent=\"" + documentEvent + "\"");
+        documentUpdate(documentEvent);
+    }
+
+    private void documentUpdate(DocumentEvent documentEvent) {
+        CharacterPlainDocument document = (CharacterPlainDocument) documentEvent.getDocument();
+        Object source = document.getSource();
+        if (source instanceof JTextArea) {
+            JTextArea textArea = (JTextArea) source;
+            changeThing(textArea.getName(), textArea.getText());
+        } else if (source instanceof JTextField) {
+            JTextField textField = (JTextField) source;
+            changeThing(textField.getName(), textField.getText());
+        } else {
+            changeThing(((JComponent) source).getName(), source.toString());
+        }
+    }
+
+    public void changeThing(String uiComponentName, Object value) {
+        LOGGER.debug("Property changed, source=\"" + uiComponentName + "\", value=\"" + value + "\"");
     }
 }

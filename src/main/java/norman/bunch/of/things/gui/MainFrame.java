@@ -3,7 +3,7 @@ package norman.bunch.of.things.gui;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import norman.bunch.of.things.Application;
-import norman.bunch.of.things.BunchType;
+import norman.bunch.of.things.DataType;
 import norman.bunch.of.things.LoggingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,8 @@ public class MainFrame extends JFrame implements ActionListener {
     private JMenuItem optionsFileItem;
     private JMenuItem exitFileItem;
     private JMenuItem newCharacterItem;
-    private JMenuItem importRuleBookItem;
+    private JMenuItem importBookGameItem;
+    private JMenuItem importSupplementGameItem;
 
     public MainFrame(Properties appProps) throws HeadlessException {
         super();
@@ -69,11 +70,14 @@ public class MainFrame extends JFrame implements ActionListener {
         characterMenu.add(newCharacterItem);
         newCharacterItem.addActionListener(this);
 
-        JMenu ruleBookMenu = new JMenu(bundle.getString("menu.rule.book"));
-        menuBar.add(ruleBookMenu);
-        importRuleBookItem = new JMenuItem(bundle.getString("menu.rule.book.import"));
-        ruleBookMenu.add(importRuleBookItem);
-        importRuleBookItem.addActionListener(this);
+        JMenu gameMenu = new JMenu(bundle.getString("menu.game"));
+        menuBar.add(gameMenu);
+        importBookGameItem = new JMenuItem(bundle.getString("menu.game.import.book"));
+        gameMenu.add(importBookGameItem);
+        importBookGameItem.addActionListener(this);
+        importSupplementGameItem = new JMenuItem(bundle.getString("menu.game.import.supplement"));
+        gameMenu.add(importSupplementGameItem);
+        importSupplementGameItem.addActionListener(this);
     }
 
     @Override
@@ -85,8 +89,10 @@ public class MainFrame extends JFrame implements ActionListener {
             options();
         } else if (actionEvent.getSource().equals(newCharacterItem)) {
             newCharacter();
-        } else if (actionEvent.getSource().equals(importRuleBookItem)) {
-            importRuleBook();
+        } else if (actionEvent.getSource().equals(importBookGameItem)) {
+            importGameBook();
+        } else if (actionEvent.getSource().equals(importSupplementGameItem)) {
+            importGameSupplement();
         }
     }
 
@@ -132,30 +138,35 @@ public class MainFrame extends JFrame implements ActionListener {
     }
 
     private void newCharacter() {
+        // Build list of campaign names.
+        // FIXME For now, we're using game books instead of campaigns.
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, File> ruleBooks = new HashMap<>();
-        for (File ruleBookFile : Application.getAppDir().listFiles()) {
+        Map<String, File> gameBooks = new HashMap<>();
+        for (File file : Application.getAppDir().listFiles()) {
             try {
-                JsonNode ruleBookJson = objectMapper.readTree(ruleBookFile);
-                JsonNode type = ruleBookJson.get("type");
-                JsonNode name = ruleBookJson.get("name");
-                if (type != null && type.asText().equals(BunchType.RULE_BOOK.name()) && name != null &&
+                JsonNode fileJson = objectMapper.readTree(file);
+                JsonNode type = fileJson.get("type");
+                JsonNode name = fileJson.get("name");
+                if (type != null && type.asText().equals(DataType.GAME_BOOK.name()) && name != null &&
                         name.asText().length() > 0) {
-                    ruleBooks.put(name.asText(), ruleBookFile);
+                    gameBooks.put(name.asText(), file);
                 }
             } catch (IOException ignored) {
+                // We are ignoring files which are not valid JSON.
             }
         }
-        String[] ruleBookNames = ruleBooks.keySet().toArray(new String[ruleBooks.keySet().size()]);
-        Arrays.sort(ruleBookNames);
-        Object selectedRuleBookName = JOptionPane.showInputDialog(this, bundle.getString("character.select.rule.book"),
-                bundle.getString("character.title"), JOptionPane.PLAIN_MESSAGE, null, ruleBookNames, null);
-        if (selectedRuleBookName != null) {
-            File selectedRuleBookFile = ruleBooks.get(selectedRuleBookName);
+        String[] gameBookNames = gameBooks.keySet().toArray(new String[gameBooks.keySet().size()]);
+        Arrays.sort(gameBookNames);
+
+        // Select a campaign.
+        // FIXME For now, we're using game books instead of campaigns.
+        Object selectedGameBookName = JOptionPane.showInputDialog(this, bundle.getString("character.select.campaign"),
+                bundle.getString("character.title"), JOptionPane.PLAIN_MESSAGE, null, gameBookNames, null);
+        if (selectedGameBookName != null) {
+            File selectedGameBookFile = gameBooks.get(selectedGameBookName);
             try {
-                JsonNode selectedRuleBookJson = objectMapper.readTree(selectedRuleBookFile);
-                JsonNode uiJson = selectedRuleBookJson.get("ui");
-                BunchFrame frame = new BunchFrame(bundle.getString("character.title"), uiJson);
+                JsonNode gameBookJson = objectMapper.readTree(selectedGameBookFile);
+                CharacterFrame frame = new CharacterFrame(bundle.getString("character.title"), gameBookJson);
                 frame.setVisible(true);
                 desktop.add(frame);
                 frame.setSelected(true);
@@ -163,13 +174,14 @@ public class MainFrame extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
                         bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             } catch (PropertyVetoException ignored) {
+                LOGGER.warn("PropertyVetoException ignored while opening New Character frame.", ignored);
             }
         }
     }
 
-    private void importRuleBook() {
+    private void importGameBook() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("menu.rule.book"), "rulebook"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("game.book.extension"), "gamebook"));
         int rtnVal = fileChooser.showOpenDialog(this);
         if (rtnVal == JFileChooser.APPROVE_OPTION) {
             File importFile = fileChooser.getSelectedFile();
@@ -178,26 +190,29 @@ public class MainFrame extends JFrame implements ActionListener {
                 JsonNode importJson = objectMapper.readTree(importFile);
                 JsonNode type = importJson.get("type");
                 JsonNode name = importJson.get("name");
-                if (type != null && type.asText().equals(BunchType.RULE_BOOK.name()) && name != null &&
+                if (type != null && type.asText().equals(DataType.GAME_BOOK.name()) && name != null &&
                         name.asText().length() > 0) {
-                    String fileName = "rb_" + name.asText().toLowerCase().replaceAll("[^a-z0-9\\.]", "_") + ".json";
+                    String fileName = "gb_" + name.asText().toLowerCase().replaceAll("[^a-z0-9\\.]", "_") + ".json";
                     File file = new File(Application.getAppDir(), fileName);
                     try {
                         objectMapper.writeValue(file, importJson);
-                        JOptionPane.showMessageDialog(this, bundle.getString("success.message.import.rule.book"));
+                        JOptionPane.showMessageDialog(this, bundle.getString("game.book.import.success"));
                     } catch (IOException e) {
-                        LOGGER.error("Error writing Rule Book JSON file.", e);
+                        LOGGER.error("Error writing Game Book JSON file.", e);
                         JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
                                 bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.rule.book"),
+                    JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.game.book"),
                             bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                 }
             } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.rule.book"),
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.game.book"),
                         bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void importGameSupplement() {
     }
 }

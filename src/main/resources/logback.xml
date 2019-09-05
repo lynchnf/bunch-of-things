@@ -24,6 +24,7 @@
     </appender>
 
     <logger name="norman.bunch.of.things" level="debug"/>
+    <logger name="norman.bunch.of.things.bunch.Bunch" level="trace"/>
     <root level="info">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
