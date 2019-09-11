@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import norman.bunch.of.things.Application;
 import norman.bunch.of.things.DataType;
+import norman.bunch.of.things.JsonUtils;
 import norman.bunch.of.things.LoggingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,19 +141,16 @@ public class MainFrame extends JFrame implements ActionListener {
     private void newCharacter() {
         // Build list of campaign names.
         // FIXME For now, we're using game books instead of campaigns.
-        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, File> gameBooks = new HashMap<>();
         for (File file : Application.getAppDir().listFiles()) {
-            try {
-                JsonNode fileJson = objectMapper.readTree(file);
+            JsonNode fileJson = JsonUtils.fileToJsonIgnoreErrors(file);
+            if (fileJson != null) {
                 JsonNode type = fileJson.get("type");
                 JsonNode name = fileJson.get("name");
                 if (type != null && type.asText().equals(DataType.GAME_BOOK.name()) && name != null &&
                         name.asText().length() > 0) {
                     gameBooks.put(name.asText(), file);
                 }
-            } catch (IOException ignored) {
-                // We are ignoring files which are not valid JSON.
             }
         }
         String[] gameBookNames = gameBooks.keySet().toArray(new String[gameBooks.keySet().size()]);
@@ -164,13 +162,14 @@ public class MainFrame extends JFrame implements ActionListener {
                 bundle.getString("character.title"), JOptionPane.PLAIN_MESSAGE, null, gameBookNames, null);
         if (selectedGameBookName != null) {
             File selectedGameBookFile = gameBooks.get(selectedGameBookName);
+
             try {
-                JsonNode gameBookJson = objectMapper.readTree(selectedGameBookFile);
+                JsonNode gameBookJson = JsonUtils.fileToJson(selectedGameBookFile);
                 CharacterFrame frame = new CharacterFrame(bundle.getString("character.title"), gameBookJson);
                 frame.setVisible(true);
                 desktop.add(frame);
                 frame.setSelected(true);
-            } catch (IOException e) {
+            } catch (LoggingException e) {
                 JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
                         bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             } catch (PropertyVetoException ignored) {

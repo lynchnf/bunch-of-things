@@ -52,7 +52,9 @@ public class Application {
         // Create home directory if it does not exist.
         File appDir = new File(SystemUtils.USER_HOME, APP_DIR_NAME);
         if (!appDir.exists()) {
-            appDir.mkdir();
+            if (!appDir.mkdir()) {
+                throw new LoggingException(LOGGER, "Error creating directory " + appDir + ".");
+            }
         }
 
         // Load properties file. Create it if it does not already exist.

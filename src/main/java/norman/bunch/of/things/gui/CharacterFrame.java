@@ -1,7 +1,7 @@
 package norman.bunch.of.things.gui;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import norman.bunch.of.things.JsonUtils;
 import norman.bunch.of.things.LoggingException;
 import norman.bunch.of.things.bunch.Bunch;
 import norman.bunch.of.things.gui.model.CharacterPlainDocument;
@@ -31,6 +31,7 @@ public class CharacterFrame extends JInternalFrame
     private static final boolean CLOSABLE = true;
     private static final boolean MAXIMIZABLE = false;
     private static final boolean ICONIFIABLE = true;
+    private static final int OPEN_OFFSET_INCREMENT = 30;
     private static int openOffset = 0;
     private ResourceBundle bundle;
     private Map<String, ButtonGroup> buttonGroups = new HashMap<>();
@@ -39,19 +40,18 @@ public class CharacterFrame extends JInternalFrame
         super(title, RESIZABLE, CLOSABLE, MAXIMIZABLE, ICONIFIABLE);
         bundle = ResourceBundle.getBundle("norman.bunch.of.things.gui.CharacterFrame");
         setLocation(openOffset, openOffset);
-        openOffset += 30;
+        openOffset += OPEN_OFFSET_INCREMENT;
         Container contentPane = new JPanel(new GridBagLayout());
         setContentPane(contentPane);
 
         // Create GUI.
-        ObjectMapper objectMapper = new ObjectMapper();
         JsonNode uiJson = gameBookJson.get("gui");
         Iterator<String> uiFieldNameIterator = uiJson.fieldNames();
         try {
             while (uiFieldNameIterator.hasNext()) {
                 String fieldName = uiFieldNameIterator.next();
                 JsonNode node = uiJson.get(fieldName);
-                Map map = objectMapper.convertValue(node, Map.class);
+                Map map = JsonUtils.jsonToMap(node);
                 addUiComponent(contentPane, map, fieldName);
             }
             pack();
@@ -60,32 +60,24 @@ public class CharacterFrame extends JInternalFrame
                     bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
 
-        // Create a new character from the template.
-        JsonNode newCharacterJson = gameBookJson.get("newCharacter");
+        // Create a bunch and load the rule book.
         Bunch bunch = new Bunch();
-        Iterator<String> newCharacterFieldNamesIterator = newCharacterJson.fieldNames();
-        while (newCharacterFieldNamesIterator.hasNext()) {
-            String id = newCharacterFieldNamesIterator.next();
-            JsonNode valueJson = newCharacterJson.get(id);
-            if (valueJson.isBoolean()) {
-                bunch.addThing(id, valueJson.booleanValue());
-            } else if (valueJson.isDouble()) {
-                bunch.addThing(id, valueJson.doubleValue());
-            } else if (valueJson.isInt()) {
-                bunch.addThing(id, valueJson.intValue());
-            } else if (valueJson.isTextual()) {
-                bunch.addThing(id, valueJson.textValue());
-            } else {
-                JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.character.value"),
-                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
-                LOGGER.error("Invalid value for character property, id=" + id + ", valueJson=" + valueJson);
-            }
+        JsonNode ruleBookJson = gameBookJson.get("ruleBook");
+        try {
+            bunch.loadRuleBook(ruleBookJson);
+        } catch (LoggingException e) {
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.rule.book.value"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
-    }
 
-    public void oldCharacterFrame(String title, JsonNode gameBookJson) {
-
-        // Create a rule service
+        // Initialize the bunch with a new character.
+        JsonNode newCharacterJson = gameBookJson.get("newCharacter");
+        try {
+            bunch.initializeCharacter(newCharacterJson);
+        } catch (LoggingException e) {
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.character.value"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+        }
 
         // Bind UI and Bunch of Things.
     }

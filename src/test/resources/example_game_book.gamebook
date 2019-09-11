@@ -194,6 +194,31 @@
             }
         }
     },
+    "ruleBook": [
+        {
+            "name": "Attribute points",
+            "regex": "^(muscles|brains|congeniality|clout|wealth|looks)Value$",
+            "add": false,
+            "change": true,
+            "remove": false,
+            "script": [
+                "var value = bunch[thingId];",
+                "var len = thingId.length();",
+                "var ptsId = thingId.substring(0, len-5) + 'Points';",
+                "if (value < 8) {",
+                "  bunch[ptsId] = bunch[thingId] * 2 - 18;",
+                "} else if (value >= 8 && value < 13) {",
+                "  bunch[ptsId] = bunch[thingId] - 10;",
+                "} else if (value >= 13 && value < 15) {",
+                "  bunch[ptsId] = bunch[thingId] * 2 - 23;",
+                "} else if (value >= 15 && value < 17) {",
+                "  bunch[ptsId] = bunch[thingId] * 3 - 38;",
+                "} else {",
+                "  bunch[ptsId] = bunch[thingId] * 4 - 55;",
+                "};"
+            ]
+        }
+    ],
     "newCharacter": {
         "characterName": "",
         "playerName": "",
