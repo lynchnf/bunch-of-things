@@ -1,8 +1,7 @@
 # Things To Do
-* Bind rules and things for new character.
+* Bind ui and character.
 * Check for existence of rule book before importing.
   * Dialog to overwrite or cancel.
-* Import dialog should remember the directory of the last selected file.
 * Make CharacterPlainDocument more efficient.
 * Allow multiple game supplements.
 * JavaDocs
@@ -20,6 +19,7 @@
 * Create UI for new character.
 * Create things for new character.
 * Create rules for new character.
+* Import dialog should remember the directory of the last selected file.
 
 # Things That Didn't Work Out
 * Change all dialogs to internal dialogs.

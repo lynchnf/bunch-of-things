@@ -6,6 +6,8 @@ import norman.bunch.of.things.Application;
 import norman.bunch.of.things.DataType;
 import norman.bunch.of.things.JsonUtils;
 import norman.bunch.of.things.LoggingException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +86,6 @@ public class MainFrame extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (actionEvent.getSource().equals(exitFileItem)) {
-            LOGGER.debug("Processing exit menu item.");
             processWindowEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         } else if (actionEvent.getSource().equals(optionsFileItem)) {
             options();
@@ -100,22 +101,14 @@ public class MainFrame extends JFrame implements ActionListener {
     @Override
     protected void processWindowEvent(WindowEvent windowEvent) {
         if (windowEvent.getSource() == this && windowEvent.getID() == WindowEvent.WINDOW_CLOSING) {
+            LOGGER.debug("Processing exit.");
 
             // Get current size and position of UI and remember it.
-            appProps.setProperty("main.frame.width", Integer.toString(getWidth()));
-            appProps.setProperty("main.frame.height", Integer.toString(getHeight()));
             Point location = getLocation();
-            appProps.setProperty("main.frame.location.x", Integer.toString(location.x));
-            appProps.setProperty("main.frame.location.y", Integer.toString(location.y));
-
-            // Save the properties file to a local file.
-            try {
-                Application.storeProps(appProps);
-            } catch (LoggingException e) {
-                JOptionPane.showInternalMessageDialog(this,
-                        bundle.getString("error.message.saving.window.size.and.location"),
-                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
-            }
+            saveAppProp(new ImmutablePair<>("main.frame.width", Integer.toString(getWidth())),
+                    new ImmutablePair<>("main.frame.height", Integer.toString(getHeight())),
+                    new ImmutablePair<>("main.frame.location.x", Integer.toString(location.x)),
+                    new ImmutablePair<>("main.frame.location.y", Integer.toString(location.y)));
         }
         super.processWindowEvent(windowEvent);
     }
@@ -126,13 +119,7 @@ public class MainFrame extends JFrame implements ActionListener {
                 .showInputDialog(this, bundle.getString("options.language"), bundle.getString("options.title"),
                         JOptionPane.PLAIN_MESSAGE, null, locales, new LocaleWrapper());
         if (newLang != null) {
-            appProps.setProperty("main.frame.language", newLang.getLocale().toLanguageTag());
-            try {
-                Application.storeProps(appProps);
-            } catch (LoggingException e) {
-                JOptionPane.showMessageDialog(this, bundle.getString("error.message.saving.window.size.and.location"),
-                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
-            }
+            saveAppProp("main.frame.language", newLang.getLocale().toLanguageTag());
             Locale.setDefault(newLang.getLocale());
             initComponents();
         }
@@ -180,10 +167,19 @@ public class MainFrame extends JFrame implements ActionListener {
 
     private void importGameBook() {
         JFileChooser fileChooser = new JFileChooser();
+        File currentDirectory = new File(appProps.getProperty("main.frame.game.directory"));
+        if (currentDirectory.exists() && currentDirectory.isDirectory()) {
+            fileChooser.setCurrentDirectory(currentDirectory);
+        }
         fileChooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("game.book.extension"), "gamebook"));
         int rtnVal = fileChooser.showOpenDialog(this);
         if (rtnVal == JFileChooser.APPROVE_OPTION) {
             File importFile = fileChooser.getSelectedFile();
+
+            // Remember directory of selected file.
+            String parent = importFile.getParent();
+            appProps.setProperty("main.frame.game.directory", parent);
+
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 JsonNode importJson = objectMapper.readTree(importFile);
@@ -213,5 +209,21 @@ public class MainFrame extends JFrame implements ActionListener {
     }
 
     private void importGameSupplement() {
+    }
+
+    private void saveAppProp(String key, String value) {
+        saveAppProp(new ImmutablePair<>(key, value));
+    }
+
+    private void saveAppProp(Pair<String, String>... pairs) {
+        for (Pair<String, String> pair : pairs) {
+            appProps.setProperty(pair.getKey(), pair.getValue());
+        }
+        try {
+            Application.storeProps(appProps);
+        } catch (LoggingException e) {
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.saving.window.size.and.location"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

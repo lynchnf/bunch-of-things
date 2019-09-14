@@ -21,7 +21,6 @@ public class Application {
 
     public static void main(String args[]) {
         LOGGER.debug("Starting Application");
-
         final Properties appProps = new Properties();
 
         // Load properties and set Look and Feel. If there's an error, there's not much I an do about it except rethrow it as a run time exception.
@@ -32,11 +31,9 @@ public class Application {
             throw new RuntimeException(e);
         }
 
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                MainFrame mainFrame = new MainFrame(appProps);
-                mainFrame.setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            MainFrame mainFrame = new MainFrame(appProps);
+            mainFrame.setVisible(true);
         });
     }
 
@@ -48,6 +45,7 @@ public class Application {
         appProps.setProperty("main.frame.location.x", BUNDLE.getString("main.frame.location.x.default"));
         appProps.setProperty("main.frame.location.y", BUNDLE.getString("main.frame.location.y.default"));
         appProps.setProperty("main.frame.language", Locale.getDefault().toLanguageTag());
+        appProps.setProperty("main.frame.game.directory", SystemUtils.USER_HOME);
 
         // Create home directory if it does not exist.
         File appDir = new File(SystemUtils.USER_HOME, APP_DIR_NAME);
@@ -61,20 +59,11 @@ public class Application {
         File appPropsFile = new File(appDir, APP_PROPS_FILE_NAME);
         if (appPropsFile.exists()) {
             LOGGER.debug("Loading window size and location properties.");
-            InputStream inputStream = null;
-            try {
-                inputStream = new FileInputStream(appPropsFile);
+
+            try (InputStream inputStream = new FileInputStream(appPropsFile)) {
                 appProps.load(inputStream);
             } catch (IOException e) {
                 throw new LoggingException(LOGGER, "Error loading properties file from " + appPropsFile + ".", e);
-            } finally {
-                if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException ignored) {
-                        LOGGER.warn("Ignored error while closing file " + appPropsFile + ".", ignored);
-                    }
-                }
             }
         } else {
             LOGGER.debug("Using default window size and location properties.");
@@ -87,20 +76,11 @@ public class Application {
         LOGGER.debug("Storing window size and location properties.");
         File appDir = new File(SystemUtils.USER_HOME, APP_DIR_NAME);
         File appPropsFile = new File(appDir, APP_PROPS_FILE_NAME);
-        FileOutputStream outputStream = null;
-        try {
-            outputStream = new FileOutputStream(appPropsFile);
+
+        try (FileOutputStream outputStream = new FileOutputStream(appPropsFile)) {
             appProps.store(outputStream, APP_PROPS_FILE_COMMENTS);
         } catch (IOException e) {
             throw new LoggingException(LOGGER, "Error storing properties file to " + appPropsFile + ".", e);
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException ignored) {
-                    LOGGER.warn("Ignored error while closing file " + appPropsFile + ".", ignored);
-                }
-            }
         }
     }
 
