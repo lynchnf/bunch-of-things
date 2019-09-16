@@ -3,6 +3,8 @@ package norman.bunch.of.things.bunch;
 import com.fasterxml.jackson.databind.JsonNode;
 import norman.bunch.of.things.JsonUtils;
 import norman.bunch.of.things.LoggingException;
+import norman.bunch.of.things.gui.CharacterFrame;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +14,9 @@ import java.util.function.Predicate;
 public class Bunch {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bunch.class);
     private List<Rule> ruleBook = new ArrayList<>();
-    private Map<String, Thing> map = new HashMap<>();
+    private Map<String, Thing> thingMap = new HashMap<>();
+    private Map<String, String> charToGuiBinding = new HashMap<>();
+    private CharacterFrame gui;
 
     public void loadRuleBook(JsonNode ruleBookJson) throws LoggingException {
         if (!ruleBookJson.isArray()) {
@@ -21,17 +25,17 @@ public class Bunch {
             Iterator<JsonNode> ruleBookIterator = ruleBookJson.elements();
             while (ruleBookIterator.hasNext()) {
                 JsonNode jsonObject = ruleBookIterator.next();
-                String name = JsonUtils.jsonToString(jsonObject.get("name"));
-                String regex = JsonUtils.jsonToString(jsonObject.get("regex"));
-                Boolean add = JsonUtils.jsonToBoolean(jsonObject.get("add"));
-                Boolean change = JsonUtils.jsonToBoolean(jsonObject.get("change"));
-                Boolean remove = JsonUtils.jsonToBoolean(jsonObject.get("remove"));
+                String name = JsonUtils.jsonValueToString(jsonObject.get("name"));
+                String regex = JsonUtils.jsonValueToString(jsonObject.get("regex"));
+                Boolean add = JsonUtils.jsonValueToBoolean(jsonObject.get("add"));
+                Boolean change = JsonUtils.jsonValueToBoolean(jsonObject.get("change"));
+                Boolean remove = JsonUtils.jsonValueToBoolean(jsonObject.get("remove"));
 
                 List<String> script = new ArrayList<>();
                 JsonNode scriptJson = jsonObject.get("script");
                 Iterator<JsonNode> scriptIterator = scriptJson.elements();
                 while (scriptIterator.hasNext()) {
-                    String line = JsonUtils.jsonToString(scriptIterator.next());
+                    String line = JsonUtils.jsonValueToString(scriptIterator.next());
                     script.add(line);
                 }
 
@@ -41,20 +45,82 @@ public class Bunch {
         }
     }
 
-    public LinkedHashMap<String, String> getAddRules(String id) {
+    public void initializeCharacter(JsonNode characterJson) throws LoggingException {
+        Iterator<String> newCharacterFieldNamesIterator = characterJson.fieldNames();
+        while (newCharacterFieldNamesIterator.hasNext()) {
+            String id = newCharacterFieldNamesIterator.next();
+            JsonNode valueJson = characterJson.get(id);
+            if (valueJson.isBoolean()) {
+                addThing(id, JsonUtils.jsonValueToBoolean(valueJson));
+            } else if (valueJson.isDouble()) {
+                addThing(id, JsonUtils.jsonValueToDouble(valueJson));
+            } else if (valueJson.isInt()) {
+                addThing(id, JsonUtils.jsonValueToInteger(valueJson));
+            } else if (valueJson.isTextual()) {
+                addThing(id, JsonUtils.jsonValueToString(valueJson));
+            } else {
+                throw new LoggingException(LOGGER,
+                        "Invalid value for character property, id=" + id + ", valueJson=" + valueJson);
+            }
+        }
+    }
+
+    public Map<String, String> setBindings(CharacterFrame characterFrame, JsonNode bindingsJson)
+            throws LoggingException {
+        this.gui = characterFrame;
+        Map<String, String> guiToCharBinding = new HashMap<>();
+        Iterator<String> bindingsFieldNamesIterator = bindingsJson.fieldNames();
+        while (bindingsFieldNamesIterator.hasNext()) {
+            String id = bindingsFieldNamesIterator.next();
+            JsonNode valueJson = bindingsJson.get(id);
+            List<String> names = JsonUtils.jsonValueToListOfStrings(valueJson);
+            String uiComponentName = StringUtils.join(names, ".");
+            guiToCharBinding.put(uiComponentName, id);
+            charToGuiBinding.put(id, uiComponentName);
+        }
+        return guiToCharBinding;
+    }
+
+    public void addThing(String id, Object value) throws LoggingException {
+        Thing thing = new Thing(this, id, value);
+        thingMap.put(id, thing);
+        LOGGER.trace(String.format("Adding thing=%s.", thing));
+        // FIXME Add component.
+        fireRules();
+    }
+
+    public void changeThing(String id, Object value) throws LoggingException {
+        Thing thing = thingMap.get(id);
+        thing.setValue(value);
+        if (thing.changed()) {
+            LOGGER.trace(String.format("Changing thing=%s.", thing));
+            gui.changeComponent(charToGuiBinding.get(id), value);
+            fireRules();
+        }
+    }
+
+    public void removeThing(String id) throws LoggingException {
+        Thing thing = thingMap.get(id);
+        thing.flagForRemoval();
+        LOGGER.trace(String.format("Removing thing=%s.", thing));
+        // FIXME Remove component.
+        fireRules();
+    }
+
+    protected LinkedHashMap<String, String> getAddRules(String id) {
         return getRulesImpl(id, rule -> rule.isAdd());
     }
 
-    public LinkedHashMap<String, String> getChangeRules(String id) {
+    protected LinkedHashMap<String, String> getChangeRules(String id) {
         return getRulesImpl(id, rule -> rule.isChange());
     }
 
-    public LinkedHashMap<String, String> getRemoveRules(String id) {
+    protected LinkedHashMap<String, String> getRemoveRules(String id) {
         return getRulesImpl(id, rule -> rule.isRemove());
     }
 
     private LinkedHashMap<String, String> getRulesImpl(String id, Predicate<Rule> predicate) {
-        // Use linked hash map to preserve order.
+        // Use linked hash thingMap to preserve order.
         LinkedHashMap<String, String> ruleNamesAndBodies = new LinkedHashMap<>();
         for (Rule rule : ruleBook) {
             if (rule.getPattern().matcher(id).matches() && predicate.test(rule)) {
@@ -70,68 +136,25 @@ public class Bunch {
         return ruleNamesAndBodies;
     }
 
-    public void initializeCharacter(JsonNode characterJson) throws LoggingException {
-        Iterator<String> newCharacterFieldNamesIterator = characterJson.fieldNames();
-        while (newCharacterFieldNamesIterator.hasNext()) {
-            String id = newCharacterFieldNamesIterator.next();
-            JsonNode valueJson = characterJson.get(id);
-            if (valueJson.isBoolean()) {
-                addThing(id, JsonUtils.jsonToBoolean(valueJson));
-            } else if (valueJson.isDouble()) {
-                addThing(id, JsonUtils.jsonToDouble(valueJson));
-            } else if (valueJson.isInt()) {
-                addThing(id, JsonUtils.jsonToInteger(valueJson));
-            } else if (valueJson.isTextual()) {
-                addThing(id, JsonUtils.jsonToString(valueJson));
-            } else {
-                throw new LoggingException(LOGGER,
-                        "Invalid value for character property, id=" + id + ", valueJson=" + valueJson);
-            }
-        }
-    }
-
-    public void addThing(String id, Object value) throws LoggingException {
-        Thing thing = new Thing(this, id, value);
-        map.put(id, thing);
-        LOGGER.trace(String.format("Adding thing=%s.", thing));
-        fileRules();
-    }
-
-    public void changeThing(String id, Object value) throws LoggingException {
-        Thing thing = map.get(id);
-        thing.setValue(value);
-        if (thing.changed()) {
-            LOGGER.trace(String.format("Changing thing=%s.", thing));
-            fileRules();
-        }
-    }
-
-    public void removeThing(String id) throws LoggingException {
-        Thing thing = map.get(id);
-        thing.flagForRemoval();
-        LOGGER.trace(String.format("Removing thing=%s.", thing));
-        fileRules();
-    }
-
-    private void fileRules() throws LoggingException {
+    private void fireRules() throws LoggingException {
         String jsonString = toJsonString();
         boolean notDoneYet = true;
         while (notDoneYet) {
             notDoneYet = false;
-            for (String id : map.keySet()) {
-                Thing thing = map.get(id);
+            for (String id : thingMap.keySet()) {
+                Thing thing = thingMap.get(id);
                 if (thing.added()) {
                     notDoneYet = true;
                     thing.unflagAdded();
-                    jsonString = thing.fileAddRules(jsonString);
+                    jsonString = thing.fireAddRules(jsonString);
                 } else if (thing.changed()) {
                     notDoneYet = true;
                     thing.unflagChanged();
-                    jsonString = thing.fileChangeRules(jsonString);
+                    jsonString = thing.fireChangeRules(jsonString);
                 } else if (thing.flaggedForRemoval()) {
                     notDoneYet = true;
-                    jsonString = thing.fileRemoveRules(jsonString);
-                    map.remove(id);
+                    jsonString = thing.fireRemoveRules(jsonString);
+                    thingMap.remove(id);
                 }
             }
             updateFromJson(jsonString);
@@ -140,39 +163,43 @@ public class Bunch {
 
     private JsonNode toJsonObject() {
         Map<String, Object> valueMap = new HashMap<>();
-        for (String id : map.keySet()) {
-            valueMap.put(id, map.get(id).getValue());
+        for (String id : thingMap.keySet()) {
+            valueMap.put(id, thingMap.get(id).getValue());
         }
         return JsonUtils.mapToJson(valueMap);
     }
 
     private String toJsonString() {
-        return toJsonObject().toString();
+        return JsonUtils.jsonTreeToString(toJsonObject());
     }
 
     private void updateFromJson(String jsonString) throws LoggingException {
-        JsonNode jsonNode = JsonUtils.stringToJson(jsonString);
+        JsonNode jsonNode = JsonUtils.stringToJsonTree(jsonString);
         Map jsonMap = JsonUtils.jsonToMap(jsonNode);
-        Set<String> removeIds = new HashSet<>(map.keySet());
+        Set<String> removeIds = new HashSet<>(thingMap.keySet());
         for (Object key : jsonMap.keySet()) {
             String id = (String) key;
-            if (map.containsKey(id)) {
+            if (thingMap.containsKey(id)) {
                 removeIds.remove(id);
-                Thing thing = map.get(id);
-                thing.setValue(jsonMap.get(id));
+                Thing thing = thingMap.get(id);
+                Object value = jsonMap.get(id);
+                thing.setValue(value);
                 if (thing.changed()) {
                     LOGGER.trace(String.format("Changing thing=%s.", thing));
+                    gui.changeComponent(charToGuiBinding.get(id), value);
                 }
             } else {
                 Thing thing = new Thing(this, id, jsonMap.get(id));
-                map.put(id, thing);
+                thingMap.put(id, thing);
                 LOGGER.trace(String.format("Adding thing=%s.", thing));
+                // FIXME Add component.
             }
         }
         for (String id : removeIds) {
-            Thing thing = map.get(id);
+            Thing thing = thingMap.get(id);
             thing.flagForRemoval();
             LOGGER.trace(String.format("Removing thing=%s.", thing));
+            // FIXME Remove component.
         }
     }
 }

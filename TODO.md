@@ -1,11 +1,11 @@
 # Things To Do
-* Bind ui and character.
 * Check for existence of rule book before importing.
   * Dialog to overwrite or cancel.
 * Make CharacterPlainDocument more efficient.
 * Allow multiple game supplements.
 * JavaDocs
 * Remove excessive logging where needed. Put in useful logging where needed.
+* PDF
 
 # Things Done
 * Change options frame to a dialog.
@@ -20,6 +20,7 @@
 * Create things for new character.
 * Create rules for new character.
 * Import dialog should remember the directory of the last selected file.
+* Bind ui and character.
 
 # Things That Didn't Work Out
 * Change all dialogs to internal dialogs.

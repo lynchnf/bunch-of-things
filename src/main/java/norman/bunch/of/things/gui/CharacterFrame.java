@@ -34,7 +34,10 @@ public class CharacterFrame extends JInternalFrame
     private static final int OPEN_OFFSET_INCREMENT = 30;
     private static int openOffset = 0;
     private ResourceBundle bundle;
+    private Bunch bunch = new Bunch();
+    private Map<String, JComponent> componentMap = new HashMap<>();
     private Map<String, ButtonGroup> buttonGroups = new HashMap<>();
+    private Map<String, String> guiToCharBinding = new HashMap<>();
 
     public CharacterFrame(String title, JsonNode gameBookJson) {
         super(title, RESIZABLE, CLOSABLE, MAXIMIZABLE, ICONIFIABLE);
@@ -60,8 +63,7 @@ public class CharacterFrame extends JInternalFrame
                     bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
 
-        // Create a bunch and load the rule book.
-        Bunch bunch = new Bunch();
+        // Load the rule book.
         JsonNode ruleBookJson = gameBookJson.get("ruleBook");
         try {
             bunch.loadRuleBook(ruleBookJson);
@@ -79,11 +81,19 @@ public class CharacterFrame extends JInternalFrame
                     bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
 
-        // Bind UI and Bunch of Things.
+        // Bind GUI and character.
+        JsonNode bindingsJson = gameBookJson.get("bindings");
+        try {
+            this.guiToCharBinding.putAll(bunch.setBindings(this, bindingsJson));
+        } catch (LoggingException e) {
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.bindings.value"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void addUiComponent(Container container, Map map, String name) throws LoggingException {
         JComponent component = createComponent(map, name);
+        componentMap.put(name, component);
         addComponentProperties(map, name, component);
         GridBagConstraints constraints = createContraints(map);
         container.add(component, constraints);
@@ -231,11 +241,13 @@ public class CharacterFrame extends JInternalFrame
                 ((JLabel) component).setText(value);
             } else if (component instanceof JRadioButton) {
                 ((JRadioButton) component).setText(value);
+            } else if (component instanceof JTextArea) {
+                ((JTextArea) component).setText(value);
             } else if (component instanceof JTextField) {
                 ((JTextField) component).setText(value);
             } else {
                 LOGGER.warn("Property _text ignored for component " + name +
-                        " because it it not a JCheckBox, JLabel, JRadioButton, or JTextField.");
+                        " because it it not a JCheckBox, JLabel, JRadioButton, JTextArea, or JTextField.");
             }
             map.remove("_text");
         }
@@ -482,7 +494,39 @@ public class CharacterFrame extends JInternalFrame
         }
     }
 
-    public void changeThing(String uiComponentName, Object value) {
-        LOGGER.debug("Property changed, source=\"" + uiComponentName + "\", value=\"" + value + "\"");
+    private void changeThing(String uiComponentName, Object value) {
+        if (guiToCharBinding.containsKey(uiComponentName)) {
+            String id = guiToCharBinding.get(uiComponentName);
+            try {
+                bunch.changeThing(id, value);
+            } catch (LoggingException e) {
+                JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
+                        bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public void changeComponent(String uiComponentName, Object value) {
+        JComponent component = componentMap.get(uiComponentName);
+        if (component instanceof JCheckBox) {
+            ((JCheckBox) component).setSelected((boolean) value);
+        } else if (component instanceof JRadioButton) {
+            ((JRadioButton) component).setSelected((boolean) value);
+        } else if (component instanceof JComboBox) {
+            ((JComboBox) component).setSelectedItem(value);
+        } else if (component instanceof JLabel) {
+            ((JLabel) component).setText(value.toString());
+        } else if (component instanceof JSpinner) {
+            ((JSpinner) component).setValue(value);
+        } else if (component instanceof JTextArea) {
+            ((JTextArea) component).setText(value.toString());
+        } else if (component instanceof JTextField) {
+            ((JTextField) component).setText(value.toString());
+        } else {
+            LOGGER.error("Cannot set value. Invalid component type=" + component.getClass().getName() + ", name=" +
+                    uiComponentName + ".");
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

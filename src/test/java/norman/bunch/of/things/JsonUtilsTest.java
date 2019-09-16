@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 public class JsonUtilsTest {
     public static final String[] fieldsNames =
             new String[]{"arrayField", "booleanField", "doubleField", "integerField", "mapField", "nullField",
-                    "stringField" };
+                    "stringField"};
     private JsonNode objectNode;
 
     @Before
@@ -100,6 +100,18 @@ public class JsonUtilsTest {
         File file = new File(url.toURI());
         JsonNode jsonNode = JsonUtils.fileToJsonIgnoreErrors(file);
         assertNull(jsonNode);
+    }
+
+    @Test
+    public void jsonTreeToFile() throws Exception {
+        // Should create a file from a JSON object without blowing up.
+        File tempFile = File.createTempFile("test", ".json");
+        JsonUtils.jsonTreeToFile(objectNode, tempFile);
+
+        // Now we should be able to read the JSON object from the file.
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(tempFile);
+        assertNotNull(jsonNode);
     }
 
     @Test
@@ -262,7 +274,7 @@ public class JsonUtilsTest {
         Map map = new LinkedHashMap();
         map.put("one", 2);
         map.put("three", "four");
-        map.put("five", new String[]{"six", "seven" });
+        map.put("five", new String[]{"six", "seven"});
         Map map2 = new HashMap();
         map2.put("eight", "nine");
         map.put("ten", map2);

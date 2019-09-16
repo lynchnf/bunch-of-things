@@ -60,22 +60,22 @@ public class Thing {
         removeFlag = true;
     }
 
-    public String fileAddRules(String jsonString) throws LoggingException {
+    public String fireAddRules(String jsonString) throws LoggingException {
         LinkedHashMap<String, String> rules = bunch.getAddRules(id);
-        return fileRulesImpl(jsonString, rules);
+        return fireRulesImpl(jsonString, rules);
     }
 
-    public String fileChangeRules(String jsonString) throws LoggingException {
+    public String fireChangeRules(String jsonString) throws LoggingException {
         LinkedHashMap<String, String> rules = bunch.getChangeRules(id);
-        return fileRulesImpl(jsonString, rules);
+        return fireRulesImpl(jsonString, rules);
     }
 
-    public String fileRemoveRules(String jsonString) throws LoggingException {
+    public String fireRemoveRules(String jsonString) throws LoggingException {
         LinkedHashMap<String, String> rules = bunch.getRemoveRules(id);
-        return fileRulesImpl(jsonString, rules);
+        return fireRulesImpl(jsonString, rules);
     }
 
-    private String fileRulesImpl(String jsonString, LinkedHashMap<String, String> rules) throws LoggingException {
+    private String fireRulesImpl(String jsonString, LinkedHashMap<String, String> rules) throws LoggingException {
         for (String name : rules.keySet()) {
             String ruleScript = rules.get(name);
             engine.put("bunchString", jsonString);

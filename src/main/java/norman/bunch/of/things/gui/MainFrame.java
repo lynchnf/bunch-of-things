@@ -1,7 +1,6 @@
 package norman.bunch.of.things.gui;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import norman.bunch.of.things.Application;
 import norman.bunch.of.things.DataType;
 import norman.bunch.of.things.JsonUtils;
@@ -19,7 +18,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class MainFrame extends JFrame implements ActionListener {
@@ -180,28 +178,24 @@ public class MainFrame extends JFrame implements ActionListener {
             String parent = importFile.getParent();
             appProps.setProperty("main.frame.game.directory", parent);
 
-            ObjectMapper objectMapper = new ObjectMapper();
             try {
-                JsonNode importJson = objectMapper.readTree(importFile);
+                JsonNode importJson = JsonUtils.fileToJson(importFile);
                 JsonNode type = importJson.get("type");
                 JsonNode name = importJson.get("name");
                 if (type != null && type.asText().equals(DataType.GAME_BOOK.name()) && name != null &&
                         name.asText().length() > 0) {
                     String fileName = "gb_" + name.asText().toLowerCase().replaceAll("[^a-z0-9\\.]", "_") + ".json";
                     File file = new File(Application.getAppDir(), fileName);
+
                     try {
-                        objectMapper.writeValue(file, importJson);
+                        JsonUtils.jsonTreeToFile(importJson, file);
                         JOptionPane.showMessageDialog(this, bundle.getString("game.book.import.success"));
-                    } catch (IOException e) {
-                        LOGGER.error("Error writing Game Book JSON file.", e);
+                    } catch (LoggingException e) {
                         JOptionPane.showMessageDialog(this, bundle.getString("error.message.unexpected"),
                                 bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                     }
-                } else {
-                    JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.game.book"),
-                            bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (IOException e) {
+            } catch (LoggingException e) {
                 JOptionPane.showMessageDialog(this, bundle.getString("error.message.import.game.book"),
                         bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
             }

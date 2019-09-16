@@ -46,151 +46,126 @@
         "primaryAttributes": {
             "_gridx": 0,
             "_gridy": 1,
-            "musclesLabel": {
+            "unspentAttributePointsLabel": {
                 "_gridx": 0,
                 "_gridy": 0,
+                "_gridwidth": 2,
+                "_component": "JLabel",
+                "_text": "Unspent Attribute Points"
+            },
+            "unspentAttributePoints": {
+                "_gridx": 2,
+                "_gridy": 0,
+                "_component": "JLabel",
+                "_text": "20"
+            },
+            "musclesLabel": {
+                "_gridx": 0,
+                "_gridy": 1,
                 "_component": "JLabel",
                 "_text": "Muscles"
             },
             "musclesValue": {
                 "_gridx": 1,
-                "_gridy": 0,
+                "_gridy": 1,
                 "_component": "JSpinner",
                 "_value": 10
             },
             "musclesPoints": {
                 "_gridx": 2,
-                "_gridy": 0,
+                "_gridy": 1,
                 "_component": "JLabel",
                 "_text": "0"
             },
             "brainsLabel": {
                 "_gridx": 0,
-                "_gridy": 1,
+                "_gridy": 2,
                 "_component": "JLabel",
                 "_text": "Brains"
             },
             "brainsValue": {
                 "_gridx": 1,
-                "_gridy": 1,
+                "_gridy": 2,
                 "_component": "JSpinner",
                 "_value": 10
             },
             "brainsPoints": {
                 "_gridx": 2,
-                "_gridy": 1,
+                "_gridy": 2,
                 "_component": "JLabel",
                 "_text": "0"
             },
             "congenialityLabel": {
                 "_gridx": 0,
-                "_gridy": 2,
+                "_gridy": 3,
                 "_component": "JLabel",
                 "_text": "Congeniality"
             },
             "congenialityValue": {
                 "_gridx": 1,
-                "_gridy": 2,
+                "_gridy": 3,
                 "_component": "JSpinner",
                 "_value": 10
             },
             "congenialityPoints": {
                 "_gridx": 2,
-                "_gridy": 2,
+                "_gridy": 3,
                 "_component": "JLabel",
                 "_text": "0"
             },
             "cloutLabel": {
                 "_gridx": 0,
-                "_gridy": 3,
+                "_gridy": 4,
                 "_component": "JLabel",
                 "_text": "Clout"
             },
             "cloutValue": {
                 "_gridx": 1,
-                "_gridy": 3,
+                "_gridy": 4,
                 "_component": "JSpinner",
                 "_value": 10
             },
             "cloutPoints": {
                 "_gridx": 2,
-                "_gridy": 3,
+                "_gridy": 4,
                 "_component": "JLabel",
                 "_text": "0"
             },
             "wealthLabel": {
                 "_gridx": 0,
-                "_gridy": 4,
+                "_gridy": 5,
                 "_component": "JLabel",
                 "_text": "Wealth"
             },
             "wealthValue": {
                 "_gridx": 1,
-                "_gridy": 4,
+                "_gridy": 5,
                 "_component": "JSpinner",
                 "_value": 10
             },
             "wealthPoints": {
                 "_gridx": 2,
-                "_gridy": 4,
+                "_gridy": 5,
                 "_component": "JLabel",
                 "_text": "0"
             },
             "looksLabel": {
                 "_gridx": 0,
-                "_gridy": 5,
+                "_gridy": 6,
                 "_component": "JLabel",
                 "_text": "Looks"
             },
             "looksValue": {
                 "_gridx": 1,
-                "_gridy": 5,
+                "_gridy": 6,
                 "_component": "JSpinner",
                 "_value": 10
             },
             "looksPoints": {
                 "_gridx": 2,
-                "_gridy": 5,
+                "_gridy": 6,
                 "_component": "JLabel",
                 "_text": "0"
-            }
-        },
-        "secondaryAttributes": {
-            "_gridx": 1,
-            "_gridy": 1,
-            "checkbox": {
-                "_gridx": 0,
-                "_gridy": 0,
-                "_component": "JCheckBox",
-                "_text": "Check Box"
-            },
-            "radiobutton1": {
-                "_gridx": 0,
-                "_gridy": 1,
-                "_component": "JRadioButton",
-                "_text": "Radio Button One",
-                "_buttonGroup": "group1"
-            },
-            "radiobutton2": {
-                "_gridx": 0,
-                "_gridy": 2,
-                "_component": "JRadioButton",
-                "_text": "Radio Button Two",
-                "_buttonGroup": "group1"
-            },
-            "radiobutton3": {
-                "_gridx": 0,
-                "_gridy": 3,
-                "_component": "JRadioButton",
-                "_text": "Radio Button Three",
-                "_buttonGroup": "group1"
-            },
-            "textarea": {
-                "_gridx": 0,
-                "_gridy": 4,
-                "_component": "JTextArea",
-                "_rows": 3,
-                "_columns": 10
             }
         }
     },
@@ -217,12 +192,25 @@
                 "  bunch[ptsId] = bunch[thingId] * 4 - 55;",
                 "};"
             ]
+        },
+        {
+            "name": "Unspent attribute points",
+            "regex": "^(muscles|brains|congeniality|clout|wealth|looks)Points$",
+            "add": false,
+            "change": true,
+            "remove": false,
+            "script": [
+                "var spentPoints = bunch['musclesPoints'] + bunch['brainsPoints'] + bunch['congenialityPoints'] + bunch['cloutPoints'] + bunch['wealthPoints'] + bunch['looksPoints'];",
+                "bunch['unspentAttributePoints'] = bunch['totalAttributePoints'] - spentPoints;"
+            ]
         }
     ],
     "newCharacter": {
         "characterName": "",
         "playerName": "",
         "class": "",
+        "totalAttributePoints": 20,
+        "unspentAttributePoints": 20,
         "musclesValue": 10,
         "musclesPoints": 0,
         "brainsValue": 10,
@@ -234,10 +222,72 @@
         "wealthValue": 10,
         "wealthPoints": 0,
         "looksValue": 10,
-        "looksPoints": 0,
-        "checkbox": false,
-        "radiobutton": "",
-        "textarea": "",
-        "floatValue": -12.34
+        "looksPoints": 0
+    },
+    "bindings": {
+        "characterName": [
+            "header",
+            "characterNameText"
+        ],
+        "playerName": [
+            "header",
+            "playerNameText"
+        ],
+        "class": [
+            "header",
+            "classText"
+        ],
+        "unspentAttributePoints": [
+            "primaryAttributes",
+            "unspentAttributePoints"
+        ],
+        "musclesValue": [
+            "primaryAttributes",
+            "musclesValue"
+        ],
+        "musclesPoints": [
+            "primaryAttributes",
+            "musclesPoints"
+        ],
+        "brainsValue": [
+            "primaryAttributes",
+            "brainsValue"
+        ],
+        "brainsPoints": [
+            "primaryAttributes",
+            "brainsPoints"
+        ],
+        "congenialityValue": [
+            "primaryAttributes",
+            "congenialityValue"
+        ],
+        "congenialityPoints": [
+            "primaryAttributes",
+            "congenialityPoints"
+        ],
+        "cloutValue": [
+            "primaryAttributes",
+            "cloutValue"
+        ],
+        "cloutPoints": [
+            "primaryAttributes",
+            "cloutPoints"
+        ],
+        "wealthValue": [
+            "primaryAttributes",
+            "wealthValue"
+        ],
+        "wealthPoints": [
+            "primaryAttributes",
+            "wealthPoints"
+        ],
+        "looksValue": [
+            "primaryAttributes",
+            "looksValue"
+        ],
+        "looksPoints": [
+            "primaryAttributes",
+            "looksPoints"
+        ]
     }
 }

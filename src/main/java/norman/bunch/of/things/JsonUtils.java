@@ -37,13 +37,22 @@ public class JsonUtils {
         return jsonNode;
     }
 
+    public static void jsonTreeToFile(JsonNode jsonNode, File file) throws LoggingException {
+        try {
+            mapper.writeValue(file, jsonNode);
+        } catch (IOException e) {
+            throw new LoggingException(LOGGER,
+                    "Unable to write JSON to file=" + (file == null ? null : file.getAbsolutePath()), e);
+        }
+    }
+
     public static String jsonTreeToString(JsonNode jsonNode) {
         return jsonNode.toString();
     }
 
     public static List<String> jsonValueToListOfStrings(JsonNode jsonNode) throws LoggingException {
         if (!jsonNode.isArray()) {
-            throw new LoggingException(LOGGER, "Json Node is not an array. jsonNode=" + jsonNode);
+            throw new LoggingException(LOGGER, "JSON node is not an array. jsonNode=" + jsonNode);
         }
         Iterator<JsonNode> elements = jsonNode.elements();
         List<String> strings = new ArrayList<>();
@@ -55,35 +64,35 @@ public class JsonUtils {
 
     public static Boolean jsonValueToBoolean(JsonNode jsonNode) throws LoggingException {
         if (!jsonNode.isBoolean()) {
-            throw new LoggingException(LOGGER, "Json Node is not a boolean. jsonNode=" + jsonNode);
+            throw new LoggingException(LOGGER, "JSON node is not a boolean. jsonNode=" + jsonNode);
         }
         return jsonNode.booleanValue();
     }
 
     public static Double jsonValueToDouble(JsonNode jsonNode) throws LoggingException {
         if (!jsonNode.isDouble()) {
-            throw new LoggingException(LOGGER, "Json Node is not a double. jsonNode=" + jsonNode);
+            throw new LoggingException(LOGGER, "JSON node is not a double. jsonNode=" + jsonNode);
         }
         return jsonNode.doubleValue();
     }
 
     public static Integer jsonValueToInteger(JsonNode jsonNode) throws LoggingException {
         if (!jsonNode.isInt()) {
-            throw new LoggingException(LOGGER, "Json Node is not an integer. jsonNode=" + jsonNode);
+            throw new LoggingException(LOGGER, "JSON node is not an integer. jsonNode=" + jsonNode);
         }
         return jsonNode.intValue();
     }
 
     public static Map jsonToMap(JsonNode jsonNode) throws LoggingException {
         if (!jsonNode.isObject()) {
-            throw new LoggingException(LOGGER, "Json Node is not an object. jsonNode=" + jsonNode);
+            throw new LoggingException(LOGGER, "JSON node is not an object. jsonNode=" + jsonNode);
         }
         return mapper.convertValue(jsonNode, Map.class);
     }
 
     public static String jsonValueToString(JsonNode jsonNode) throws LoggingException {
         if (!jsonNode.isTextual()) {
-            throw new LoggingException(LOGGER, "Json Node is not text. jsonNode=" + jsonNode);
+            throw new LoggingException(LOGGER, "JSON node is not text. jsonNode=" + jsonNode);
         }
         return jsonNode.textValue();
     }
