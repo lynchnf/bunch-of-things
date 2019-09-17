@@ -1,11 +1,13 @@
 # Things To Do
 * Check for existence of rule book before importing.
   * Dialog to overwrite or cancel.
-* Make CharacterPlainDocument more efficient.
 * Allow multiple game supplements.
-* JavaDocs
-* Remove excessive logging where needed. Put in useful logging where needed.
-* PDF
+* JavaDocs.
+* PDFs.
+* Much better validation when uploading game book.
+* Make spinner work with float numbers.
+* Campaign editor.
+* Unit tests.
 
 # Things Done
 * Change options frame to a dialog.
@@ -27,3 +29,5 @@
 
 # Things I May or May Not Do
 * Editor for game books and supplements.
+* Make CharacterPlainDocument more efficient.
+* Remove excessive logging where needed. Put in useful logging where needed.

@@ -1,10 +1,10 @@
-package norman.bunch.of.things;
+package norman.bunch.of.things.gui;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ApplicationTest {
+public class LocaleWrapperTest {
     @Before
     public void setUp() throws Exception {
     }
@@ -14,14 +14,10 @@ public class ApplicationTest {
     }
 
     @Test
-    public void main() {
+    public void getLocale() {
     }
 
     @Test
-    public void storeProps() {
-    }
-
-    @Test
-    public void getAppDir() {
+    public void equals() {
     }
 }
