@@ -1,39 +1,28 @@
 package norman.bunch.of.things.bunch;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class RuleTest {
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
-    public void getName() {
-    }
+    public void getEverything() {
+        List<String> script = new ArrayList<>();
+        script.add("line1");
+        script.add("line2");
 
-    @Test
-    public void getPattern() {
-    }
+        Rule rule = new Rule("name", "^regex$", true, false, true, script);
 
-    @Test
-    public void isAdd() {
-    }
-
-    @Test
-    public void isChange() {
-    }
-
-    @Test
-    public void isRemove() {
-    }
-
-    @Test
-    public void getScript() {
+        assertEquals("name", rule.getName());
+        assertEquals("^regex$", rule.getPattern().pattern());
+        assertTrue(rule.isAdd());
+        assertFalse(rule.isChange());
+        assertTrue(rule.isRemove());
+        assertEquals(2, rule.getScript().size());
+        assertEquals("line1", rule.getScript().get(0));
+        assertEquals("line2", rule.getScript().get(1));
     }
 }

@@ -15,9 +15,9 @@ import java.util.ResourceBundle;
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
     private static final ResourceBundle BUNDLE = ResourceBundle.getBundle("application");
-    private static final String APP_DIR_NAME = ".bunch-of-things";
-    private static final String APP_PROPS_FILE_NAME = "bunch-of-things.properties";
-    private static final String APP_PROPS_FILE_COMMENTS = "Bunch Of Things";
+    private static final String APP_DIR_NAME = BUNDLE.getString("app.dir.name");
+    private static final String APP_PROPS_FILE_NAME = BUNDLE.getString("app.props.file.name");
+    private static final String APP_PROPS_FILE_COMMENTS = BUNDLE.getString("app.props.file.comments");
 
     public static void main(String args[]) {
         LOGGER.debug("Starting Application");
@@ -47,19 +47,10 @@ public class Application {
         appProps.setProperty("main.frame.language", Locale.getDefault().toLanguageTag());
         appProps.setProperty("main.frame.game.directory", SystemUtils.USER_HOME);
 
-        // Create home directory if it does not exist.
-        File appDir = new File(SystemUtils.USER_HOME, APP_DIR_NAME);
-        if (!appDir.exists()) {
-            if (!appDir.mkdir()) {
-                throw new LoggingException(LOGGER, "Error creating directory " + appDir + ".");
-            }
-        }
-
         // Load properties file. Create it if it does not already exist.
-        File appPropsFile = new File(appDir, APP_PROPS_FILE_NAME);
+        File appPropsFile = new File(getAppDir(), APP_PROPS_FILE_NAME);
         if (appPropsFile.exists()) {
             LOGGER.debug("Loading window size and location properties.");
-
             try (InputStream inputStream = new FileInputStream(appPropsFile)) {
                 appProps.load(inputStream);
             } catch (IOException e) {
@@ -74,9 +65,16 @@ public class Application {
 
     public static void storeProps(Properties appProps) throws LoggingException {
         LOGGER.debug("Storing window size and location properties.");
-        File appDir = new File(SystemUtils.USER_HOME, APP_DIR_NAME);
-        File appPropsFile = new File(appDir, APP_PROPS_FILE_NAME);
 
+        // Create home directory if it does not exist.
+        File appDir = getAppDir();
+        if (!appDir.exists()) {
+            if (!appDir.mkdir()) {
+                throw new LoggingException(LOGGER, "Error creating directory " + appDir + ".");
+            }
+        }
+
+        File appPropsFile = new File(appDir, APP_PROPS_FILE_NAME);
         try (FileOutputStream outputStream = new FileOutputStream(appPropsFile)) {
             appProps.store(outputStream, APP_PROPS_FILE_COMMENTS);
         } catch (IOException e) {

@@ -63,15 +63,6 @@ public class CharacterFrame extends JInternalFrame
                     bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
 
-        // Load the rule book.
-        JsonNode ruleBookJson = gameBookJson.get("ruleBook");
-        try {
-            bunch.loadRuleBook(ruleBookJson);
-        } catch (LoggingException e) {
-            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.rule.book.value"),
-                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
-        }
-
         // Initialize the bunch with a new character.
         JsonNode newCharacterJson = gameBookJson.get("newCharacter");
         try {
@@ -87,6 +78,15 @@ public class CharacterFrame extends JInternalFrame
             this.guiToCharBinding.putAll(bunch.setBindings(this, bindingsJson));
         } catch (LoggingException e) {
             JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.bindings.value"),
+                    bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        // Load the rule book.
+        JsonNode ruleBookJson = gameBookJson.get("ruleBook");
+        try {
+            bunch.loadRuleBook(ruleBookJson);
+        } catch (LoggingException e) {
+            JOptionPane.showMessageDialog(this, bundle.getString("error.message.invalid.rule.book.value"),
                     bundle.getString("error.dialog.title"), JOptionPane.ERROR_MESSAGE);
         }
     }

@@ -1,23 +1,27 @@
 package norman.bunch.of.things.gui;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Locale;
+
+import static org.junit.Assert.*;
+
 public class LocaleWrapperTest {
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
     public void getLocale() {
+        LocaleWrapper localeWrapperEnglish = new LocaleWrapper(Locale.ENGLISH);
+        assertEquals(Locale.ENGLISH, localeWrapperEnglish.getLocale());
+        assertEquals(Locale.ENGLISH.getDisplayName(), localeWrapperEnglish.toString());
+
+        LocaleWrapper localeWrapperFrench = new LocaleWrapper(Locale.FRENCH);
+        assertEquals(Locale.FRENCH, localeWrapperFrench.getLocale());
+        assertEquals(Locale.FRENCH.getDisplayName(), localeWrapperFrench.toString());
     }
 
     @Test
-    public void equals() {
+    public void getLocaleNoArgConstructor() {
+        LocaleWrapper localeWrapper = new LocaleWrapper();
+        assertEquals(Locale.getDefault(), localeWrapper.getLocale());
+        assertEquals(Locale.getDefault().getDisplayName(), localeWrapper.toString());
     }
 }

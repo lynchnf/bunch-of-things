@@ -8,16 +8,19 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.LinkedHashMap;
+import java.util.ResourceBundle;
 
 public class Thing {
     private static final Logger LOGGER = LoggerFactory.getLogger(Thing.class);
+    private static final ResourceBundle BUNDLE = ResourceBundle.getBundle("application");
+    private static final String SCRIPT_ENGINE_NAME = BUNDLE.getString("script.engine.name");
+    private ScriptEngine engine = new ScriptEngineManager().getEngineByName(SCRIPT_ENGINE_NAME);
     private Bunch bunch;
     private String id;
     private Object value;
     private Object oldValue;
     private boolean addFlag;
     private boolean removeFlag;
-    private ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 
     public Thing(Bunch bunch, String id, Object value) {
         this.bunch = bunch;

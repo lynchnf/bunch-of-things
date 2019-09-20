@@ -18,33 +18,6 @@ public class Bunch {
     private Map<String, String> charToGuiBinding = new HashMap<>();
     private CharacterFrame gui;
 
-    public void loadRuleBook(JsonNode ruleBookJson) throws LoggingException {
-        if (!ruleBookJson.isArray()) {
-            throw new LoggingException(LOGGER, "Element ruleBook is not an array.");
-        } else {
-            Iterator<JsonNode> ruleBookIterator = ruleBookJson.elements();
-            while (ruleBookIterator.hasNext()) {
-                JsonNode jsonObject = ruleBookIterator.next();
-                String name = JsonUtils.jsonValueToString(jsonObject.get("name"));
-                String regex = JsonUtils.jsonValueToString(jsonObject.get("regex"));
-                Boolean add = JsonUtils.jsonValueToBoolean(jsonObject.get("add"));
-                Boolean change = JsonUtils.jsonValueToBoolean(jsonObject.get("change"));
-                Boolean remove = JsonUtils.jsonValueToBoolean(jsonObject.get("remove"));
-
-                List<String> script = new ArrayList<>();
-                JsonNode scriptJson = jsonObject.get("script");
-                Iterator<JsonNode> scriptIterator = scriptJson.elements();
-                while (scriptIterator.hasNext()) {
-                    String line = JsonUtils.jsonValueToString(scriptIterator.next());
-                    script.add(line);
-                }
-
-                Rule rule = new Rule(name, regex, add, change, remove, script);
-                ruleBook.add(rule);
-            }
-        }
-    }
-
     public void initializeCharacter(JsonNode characterJson) throws LoggingException {
         Iterator<String> newCharacterFieldNamesIterator = characterJson.fieldNames();
         while (newCharacterFieldNamesIterator.hasNext()) {
@@ -79,6 +52,33 @@ public class Bunch {
             charToGuiBinding.put(id, uiComponentName);
         }
         return guiToCharBinding;
+    }
+
+    public void loadRuleBook(JsonNode ruleBookJson) throws LoggingException {
+        if (!ruleBookJson.isArray()) {
+            throw new LoggingException(LOGGER, "Element ruleBook is not an array.");
+        } else {
+            Iterator<JsonNode> ruleBookIterator = ruleBookJson.elements();
+            while (ruleBookIterator.hasNext()) {
+                JsonNode jsonObject = ruleBookIterator.next();
+                String name = JsonUtils.jsonValueToString(jsonObject.get("name"));
+                String regex = JsonUtils.jsonValueToString(jsonObject.get("regex"));
+                Boolean add = JsonUtils.jsonValueToBoolean(jsonObject.get("add"));
+                Boolean change = JsonUtils.jsonValueToBoolean(jsonObject.get("change"));
+                Boolean remove = JsonUtils.jsonValueToBoolean(jsonObject.get("remove"));
+
+                List<String> script = new ArrayList<>();
+                JsonNode scriptJson = jsonObject.get("script");
+                Iterator<JsonNode> scriptIterator = scriptJson.elements();
+                while (scriptIterator.hasNext()) {
+                    String line = JsonUtils.jsonValueToString(scriptIterator.next());
+                    script.add(line);
+                }
+
+                Rule rule = new Rule(name, regex, add, change, remove, script);
+                ruleBook.add(rule);
+            }
+        }
     }
 
     public void addThing(String id, Object value) throws LoggingException {
