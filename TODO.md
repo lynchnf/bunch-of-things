@@ -8,6 +8,11 @@
 * Make spinner work with float numbers.
 * Campaign editor.
 * Unit tests.
+* Import campaigns.
+* Export campaigns.
+* Import characters.
+* Export characters.
+* Use JasperReports for PDF generation.
 
 # Things Done
 * Change options frame to a dialog.
