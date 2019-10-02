@@ -5,6 +5,7 @@ import norman.bunch.of.things.Application;
 import norman.bunch.of.things.DataType;
 import norman.bunch.of.things.JsonUtils;
 import norman.bunch.of.things.LoggingException;
+import norman.bunch.of.things.gui.foo.FooFrame;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class MainFrame extends JFrame implements ActionListener {
     private JMenuItem newCharacterItem;
     private JMenuItem importBookGameItem;
     private JMenuItem importSupplementGameItem;
+    private JMenuItem fooItem;
 
     public MainFrame(Properties appProps) throws HeadlessException {
         super();
@@ -79,6 +81,12 @@ public class MainFrame extends JFrame implements ActionListener {
         importSupplementGameItem = new JMenuItem(bundle.getString("menu.game.import.supplement"));
         gameMenu.add(importSupplementGameItem);
         importSupplementGameItem.addActionListener(this);
+
+        JMenu fooMenu = new JMenu("Foo");
+        menuBar.add(fooMenu);
+        fooItem = new JMenuItem("Foo...");
+        fooMenu.add(fooItem);
+        fooItem.addActionListener(this);
     }
 
     @Override
@@ -93,6 +101,19 @@ public class MainFrame extends JFrame implements ActionListener {
             importGameBook();
         } else if (actionEvent.getSource().equals(importSupplementGameItem)) {
             importGameSupplement();
+        } else if (actionEvent.getSource().equals(fooItem)) {
+            doFoo();
+        }
+    }
+
+    private void doFoo() {
+        FooFrame frame = new FooFrame("Foo");
+        frame.setVisible(true);
+        desktop.add(frame);
+        try {
+            frame.setSelected(true);
+        } catch (PropertyVetoException e) {
+            e.printStackTrace();
         }
     }
 
