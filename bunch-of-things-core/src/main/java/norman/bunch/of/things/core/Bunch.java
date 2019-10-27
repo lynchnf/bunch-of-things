@@ -35,9 +35,18 @@ public class Bunch {
         map.put(key, bag);
     }
 
-    public void addBunchToBag(String bagKey, String bunchKey) {
+    public BunchAddEvent addBunchToBag(String bagKey, String bunchKey) {
         Bag bag = (Bag) map.get(bagKey);
-        bag.addBunch(bunchKey);
+        BunchAddEvent event = bag.addBunch(bunchKey);
+        event.setBagKey(bagKey);
+        return event;
+    }
+
+    public BunchRemoveEvent removeBunchFromBag(String bagKey, String bunchKey) {
+        Bag bag = (Bag) map.get(bagKey);
+        BunchRemoveEvent event = bag.removeBunch(bunchKey);
+        event.setBagKey(bagKey);
+        return event;
     }
 
     public ThingChangeEvent changeThing(String key, Object value) {

@@ -17,12 +17,20 @@ public class Bag {
         this.keysInBunch = keysInBunch;
     }
 
-    public void addBunch(String key) {
+    public BunchAddEvent addBunch(String key) {
         Bunch bunch = new Bunch();
         for (String keyInBunch : keysInBunch) {
             bunch.initThing(keyInBunch, null);
         }
         map.put(key, bunch);
+        BunchAddEvent event = new BunchAddEvent(key, bunch);
+        return event;
+    }
+
+    public BunchRemoveEvent removeBunch(String key) {
+        Bunch bunch = map.remove(key);
+        BunchRemoveEvent event = new BunchRemoveEvent(key, bunch);
+        return event;
     }
 
     public void initThing(String[] keyPath, Object value) {
